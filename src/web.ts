@@ -38,30 +38,40 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
     mode?: 'signIn' | 'signUp' | 'signInOrUp';
     dismissable?: boolean;
   }): Promise<AuthResult> {
-    if (!this.clerk) throw new Error('configure() must be called first');
+    const clerk = this.clerk;
+    if (!clerk) throw new Error('configure() must be called first');
 
     const mode = options?.mode ?? 'signInOrUp';
+    // forceRedirectUrl (not fallbackRedirectUrl) so we always return to the
+    // current page after sign-in. fallback would defer to URL params or env
+    // defaults, which in a Capacitor WebView could navigate the host page out
+    // from under us.
     const props = {
-      fallbackRedirectUrl: window.location.href,
+      forceRedirectUrl: window.location.href,
     };
 
     if (mode === 'signUp') {
-      this.clerk.openSignUp(props);
+      clerk.openSignUp(props);
     } else {
-      this.clerk.openSignIn(props);
+      clerk.openSignIn(props);
     }
 
     // Wait for a session to materialize. We skip the initial emit so we
     // don't resolve immediately if the user is already signed in.
+    // Known limitation, documented in spec section 6.1: clerk-js does not
+    // emit a "modal closed" event, so this Promise stays pending if the user
+    // closes the modal without signing in. Consumers should rely on
+    // useAuth() reactivity for web; native bridges Plan 4 surface a real
+    // cancellation callback.
     return new Promise<AuthResult>((resolve) => {
-      const stop = this.clerk!.addListener(
+      const stop = clerk.addListener(
         ({ session }) => {
-          if (session) {
+          if (session?.user) {
             stop();
             resolve({
               status: 'completed',
               sessionId: session.id,
-              userId: session.user!.id,
+              userId: session.user.id,
             });
           }
         },
