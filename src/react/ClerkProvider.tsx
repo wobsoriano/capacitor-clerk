@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { Clerk } from '@clerk/clerk-js';
 import { InternalClerkProvider as RawInternalClerkProvider } from '@clerk/react/internal';
 import type { ComponentType, ReactNode } from 'react';
@@ -7,7 +8,9 @@ import type { TokenCache } from '../definitions';
 import { ClerkPlugin } from '../index';
 import { tokenCache as defaultTokenCache } from '../token-cache';
 
+import { NativeSessionSync } from './NativeSessionSync';
 import { createClerkInstance } from './createClerkInstance';
+import { useNativeAuthEvents } from './useNativeAuthEvents';
 
 export interface ClerkProviderProps {
   publishableKey: string;
@@ -44,14 +47,35 @@ export function ClerkProvider({
   // ClerkPlugin.presentUserProfile() / signOut() work. On web this builds a
   // second clerk-js instance inside ClerkPluginWeb; both instances share the
   // same cookie session on the same origin, so they stay in sync at load time.
-  // Plan 4 unifies them via native sync.
+  // On native, the plugin's configure delegates to the registered factory.
   useEffect(() => {
     void ClerkPlugin.configure({ publishableKey });
   }, [publishableKey]);
 
   return (
     <InternalClerkProvider clerk={clerk} publishableKey={publishableKey}>
+      {Capacitor.isNativePlatform() ? (
+        <NativeSyncBridge clerk={clerk} publishableKey={publishableKey} tokenCache={tokenCache} />
+      ) : null}
       {children}
     </InternalClerkProvider>
   );
+}
+
+/**
+ * Internal helper: mounts the native auth-event listener and the JS-to-native
+ * session sync. Must live inside InternalClerkProvider because NativeSessionSync
+ * uses useAuth() which requires the provider context.
+ */
+function NativeSyncBridge({
+  clerk,
+  publishableKey,
+  tokenCache,
+}: {
+  clerk: ReturnType<typeof buildClerkInstance>;
+  publishableKey: string;
+  tokenCache: TokenCache;
+}): JSX.Element | null {
+  useNativeAuthEvents({ clerk, tokenCache });
+  return <NativeSessionSync publishableKey={publishableKey} tokenCache={tokenCache} />;
 }
