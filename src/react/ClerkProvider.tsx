@@ -1,9 +1,10 @@
 import { Clerk } from '@clerk/clerk-js';
 import { InternalClerkProvider as RawInternalClerkProvider } from '@clerk/react/internal';
 import type { ComponentType, ReactNode } from 'react';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import type { TokenCache } from '../definitions';
+import { ClerkPlugin } from '../index';
 import { tokenCache as defaultTokenCache } from '../token-cache';
 
 import { createClerkInstance } from './createClerkInstance';
@@ -38,6 +39,15 @@ export function ClerkProvider({
     () => buildClerkInstance({ publishableKey, tokenCache }),
     [publishableKey, tokenCache],
   );
+
+  // Initialize ClerkPlugin (the platform-agnostic facade) so calls like
+  // ClerkPlugin.presentUserProfile() / signOut() work. On web this builds a
+  // second clerk-js instance inside ClerkPluginWeb; both instances share the
+  // same cookie session on the same origin, so they stay in sync at load time.
+  // Plan 4 unifies them via native sync.
+  useEffect(() => {
+    void ClerkPlugin.configure({ publishableKey });
+  }, [publishableKey]);
 
   return (
     <InternalClerkProvider clerk={clerk} publishableKey={publishableKey}>
