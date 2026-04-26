@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Clerk as ClerkType } from '@clerk/clerk-js';
 
 import type { AuthStateChangeEvent } from '../definitions';
 import { ClerkPluginWeb } from '../web';
@@ -7,7 +6,7 @@ import { ClerkPluginWeb } from '../web';
 // Hoisted mock for @clerk/clerk-js. The factory creates a fake Clerk class
 // whose addListener captures the listener so tests can drive it.
 const { ClerkMock, listenerRefs } = vi.hoisted(() => {
-  const listenerRefs: Array<(state: { session: any }) => void> = [];
+  const listenerRefs: ((state: { session: any }) => void)[] = [];
   class FakeClerk {
     public session: any = null;
     public addListener = vi.fn((listener: (state: { session: any }) => void) => {
@@ -17,7 +16,7 @@ const { ClerkMock, listenerRefs } = vi.hoisted(() => {
         if (i >= 0) listenerRefs.splice(i, 1);
       };
     });
-    public load = vi.fn(async () => {});
+    public load = vi.fn().mockResolvedValue(undefined);
   }
   return { ClerkMock: FakeClerk, listenerRefs };
 });

@@ -35,7 +35,7 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
       { skipInitialEmit: true },
     );
 
-    // Suppress unused-warnings for the field; later tasks call it on teardown.
+    // Reference the field to satisfy noUnusedLocals; later tasks call it on teardown.
     void this.unsubscribeFromClerk;
   }
 
