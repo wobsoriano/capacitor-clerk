@@ -1,8 +1,8 @@
 import { registerPlugin } from '@capacitor/core';
 
-import type { ClerkPluginPlugin } from './definitions';
+import type { ClerkPluginInterface } from './definitions';
 
-const ClerkPlugin = registerPlugin<ClerkPluginPlugin>('ClerkPlugin', {
+const ClerkPlugin = registerPlugin<ClerkPluginInterface>('ClerkPlugin', {
   web: () => import('./web').then((m) => new m.ClerkPluginWeb()),
 });
 
