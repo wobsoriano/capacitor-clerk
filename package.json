@@ -1,16 +1,33 @@
 {
   "name": "capacitor-clerk",
-  "version": "0.0.1",
-  "description": "Capacitor plugin for Clerk",
+  "version": "0.1.0",
+  "description": "Capacitor plugin for Clerk authentication",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "unpkg": "dist/plugin.js",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/plugin.cjs.js"
+    },
+    "./react": {
+      "types": "./dist/esm/react/index.d.ts",
+      "import": "./dist/esm/react/index.js"
+    },
+    "./token-cache": {
+      "types": "./dist/esm/token-cache/index.d.ts",
+      "import": "./dist/esm/token-cache/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "android/src/main/",
     "android/build.gradle",
     "dist/",
     "ios/Sources",
+    "ios/Templates",
     "ios/Tests",
     "Package.swift",
     "CapacitorClerk.podspec"
@@ -19,31 +36,40 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Robert Soriano/capacitor-clerk.git"
+    "url": "git+https://github.com/wobsoriano/capacitor-clerk.git"
   },
   "bugs": {
-    "url": "https://github.com/Robert Soriano/capacitor-clerk/issues"
+    "url": "https://github.com/wobsoriano/capacitor-clerk/issues"
   },
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "clerk",
+    "authentication"
   ],
   "scripts": {
-    "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
+    "verify": "npm run verify:web && npm run verify:android && npm run verify:ios",
     "verify:ios": "xcodebuild -scheme CapacitorClerk -destination generic/platform=iOS",
     "verify:android": "cd android && ./gradlew clean build test && cd ..",
-    "verify:web": "npm run build",
+    "verify:web": "npm run lint && npm run test && npm run build",
     "lint": "npm run eslint && npm run prettier -- --check && npm run swiftlint -- lint",
     "fmt": "npm run eslint -- --fix && npm run prettier -- --write && npm run swiftlint -- --fix --format",
-    "eslint": "eslint . --ext ts",
-    "prettier": "prettier \"**/*.{css,html,ts,js,java}\" --plugin=prettier-plugin-java",
+    "eslint": "eslint . --ext ts,tsx",
+    "prettier": "prettier \"**/*.{css,html,ts,tsx,js,java}\" --plugin=prettier-plugin-java",
     "swiftlint": "node-swiftlint",
-    "docgen": "docgen --api ClerkPluginPlugin --output-readme README.md --output-json dist/docs.json",
+    "docgen": "docgen --api ClerkPluginInterface --output-readme README.md --output-json dist/docs.json",
     "build": "npm run clean && npm run docgen && tsc && rollup -c rollup.config.mjs",
     "clean": "rimraf ./dist",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@clerk/clerk-js": "^6.0.0",
+    "@clerk/react": "^6.0.0",
+    "@clerk/shared": "^4.0.0"
   },
   "devDependencies": {
     "@capacitor/android": "^8.0.0",
@@ -53,16 +79,31 @@
     "@ionic/eslint-config": "^0.4.0",
     "@ionic/prettier-config": "^4.0.0",
     "@ionic/swiftlint-config": "^2.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
     "eslint": "^8.57.1",
+    "happy-dom": "^15.0.0",
     "prettier": "^3.6.2",
     "prettier-plugin-java": "^2.7.7",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
     "rimraf": "^6.1.0",
     "rollup": "^4.53.2",
+    "rollup-plugin-typescript2": "^0.36.0",
     "swiftlint": "^2.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^2.0.0"
   },
   "peerDependencies": {
-    "@capacitor/core": ">=8.0.0"
+    "@capacitor/core": ">=8.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "react-dom": { "optional": true }
   },
   "prettier": "@ionic/prettier-config",
   "swiftlint": "@ionic/swiftlint-config",
