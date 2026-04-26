@@ -47,9 +47,60 @@ function App() {
 
 `<ClerkProvider>` wraps `@clerk/react`'s provider so all `@clerk/react` hooks are available: `useUser`, `useAuth`, `useSession`, `useSignIn`, `useSignUp`, `useOrganization`, etc.
 
-## Native platform support
+## iOS support
 
-Native iOS and Android support requires Plans 2 to 4 to be implemented. Until then, calling `presentAuth()` and friends on iOS or Android falls back to the unmodified Capacitor scaffold's `echo` placeholder.
+After installing the package and running `npx cap sync`, complete these steps to enable native iOS auth.
+
+### 1. Add `clerk-ios` via Swift Package Manager
+
+In Xcode, open your iOS app's Xcode project (`ios/App/App.xcodeproj`).
+
+Note: Capacitor 8's iOS template uses an `.xcodeproj` (not an `.xcworkspace`). The Swift Package Manager workflow integrates directly with the project.
+
+Go to **File > Add Package Dependencies...**, paste `https://github.com/clerk/clerk-ios`, and add **ClerkKit** to your **App** target. Pin to an exact version range (e.g., **Up to Next Major Version** from the latest release).
+
+Set the **App** target's **Minimum Deployments** to **iOS 17.0** (this is what `clerk-ios` requires).
+
+### 2. Copy the factory template
+
+```bash
+cp node_modules/capacitor-clerk/ios/Templates/ClerkViewFactory.template.swift \
+   ios/App/App/ClerkViewFactory.swift
+```
+
+In Xcode, right-click the **App** group in the Project Navigator and choose **Add Files to "App"...**. Select the new `ClerkViewFactory.swift` file. Make sure **App** is checked under "Add to targets". Click **Add**.
+
+(Capacitor's iOS template uses an explicit-PBXGroup project, not synchronized folder groups. Files placed in the source directory must be explicitly added to the target via Xcode UI for them to compile.)
+
+### 3. Register the factory in `AppDelegate`
+
+In `ios/App/App/AppDelegate.swift`, add:
+
+```swift
+import CapacitorClerk
+
+// inside application(_:didFinishLaunchingWithOptions:)
+clerkViewFactory = ClerkViewFactory()
+```
+
+The full method should look approximately like:
+
+```swift
+func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    clerkViewFactory = ClerkViewFactory()
+    return true
+}
+```
+
+### 4. Enable Native API in Clerk Dashboard
+
+The Clerk instance must have **Native API enabled** (Dashboard > Configure > Native applications). Without it, the iOS SDK rejects requests with `native_api_disabled`.
+
+After these four steps, calling `ClerkPlugin.presentAuth()` from JS will open a native SwiftUI sign-in sheet on iOS.
+
+## Android support
+
+(Coming in Plan 3.)
 
 ## API
 
