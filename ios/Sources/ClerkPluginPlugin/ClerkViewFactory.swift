@@ -37,7 +37,7 @@ public protocol ClerkViewFactoryProtocol {
     func getSession() async -> [String: Any]?
 
     /// Return the current session's JWT, or nil if not signed in.
-    func getClientToken() -> String?
+    func getClientToken() async -> String?
 
     /// Sign the current user out via clerk-ios.
     func signOut() async throws

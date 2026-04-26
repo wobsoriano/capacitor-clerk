@@ -126,8 +126,10 @@ public class ClerkPluginPlugin: CAPPlugin, CAPBridgedPlugin {
             call.resolve(["value": NSNull()])
             return
         }
-        let token = factory.getClientToken()
-        call.resolve(["value": token ?? NSNull()])
+        Task {
+            let token = await factory.getClientToken()
+            call.resolve(["value": token ?? NSNull()])
+        }
     }
 
     @objc func signOut(_ call: CAPPluginCall) {

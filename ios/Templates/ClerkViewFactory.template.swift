@@ -85,9 +85,9 @@ class ClerkViewFactory: ClerkViewFactoryProtocol {
         }
     }
 
-    func getClientToken() -> String? {
-        MainActor.assumeIsolated {
-            return Clerk.shared.session?.lastActiveToken?.jwt
+    func getClientToken() async -> String? {
+        await MainActor.run {
+            Clerk.shared.session?.lastActiveToken?.jwt
         }
     }
 
