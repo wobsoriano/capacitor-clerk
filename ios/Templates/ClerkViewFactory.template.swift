@@ -86,9 +86,12 @@ class ClerkViewFactory: ClerkViewFactoryProtocol {
     }
 
     func getClientToken() async -> String? {
-        await MainActor.run {
-            Clerk.shared.session?.lastActiveToken?.jwt
+        guard let session = await MainActor.run(body: { Clerk.shared.session }) else {
+            return nil
         }
+        // Session.getToken() is async; lastActiveToken is only populated after
+        // a token has been fetched, so go through the canonical API.
+        return try? await session.getToken()
     }
 
     func signOut() async throws {
