@@ -39,15 +39,45 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
     void this.unsubscribeFromClerk;
   }
 
-  async presentAuth(_options?: {
+  async presentAuth(options?: {
     mode?: 'signIn' | 'signUp' | 'signInOrUp';
     dismissable?: boolean;
   }): Promise<AuthResult> {
-    throw this.unimplemented('presentAuth not implemented yet');
+    if (!this.clerk) throw new Error('configure() must be called first');
+
+    const mode = options?.mode ?? 'signInOrUp';
+    const props = {
+      fallbackRedirectUrl: window.location.href,
+    };
+
+    if (mode === 'signUp') {
+      this.clerk.openSignUp(props);
+    } else {
+      this.clerk.openSignIn(props);
+    }
+
+    // Wait for a session to materialize. We skip the initial emit so we
+    // don't resolve immediately if the user is already signed in.
+    return new Promise<AuthResult>((resolve) => {
+      const stop = this.clerk!.addListener(
+        ({ session }) => {
+          if (session) {
+            stop();
+            resolve({
+              status: 'completed',
+              sessionId: session.id,
+              userId: session.user!.id,
+            });
+          }
+        },
+        { skipInitialEmit: true },
+      );
+    });
   }
 
   async presentUserProfile(_options?: { dismissable?: boolean }): Promise<void> {
-    throw this.unimplemented('presentUserProfile not implemented yet');
+    if (!this.clerk) throw new Error('configure() must be called first');
+    this.clerk.openUserProfile();
   }
 
   async getSession(): Promise<NativeSessionSnapshot | null> {
