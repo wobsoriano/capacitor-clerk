@@ -35,23 +35,45 @@ export function useNativeAuthEvents({ clerk, tokenCache }: UseNativeAuthEventsOp
     isMountedRef.current = true;
     let listener: PluginListenerHandle | null = null;
 
+    const setActiveOnClerk = (sessionId: string) => {
+      const setActive = (
+        clerk as unknown as {
+          setActive?: (opts: { session: string }) => Promise<void>;
+        }
+      ).setActive;
+      return setActive ? setActive({ session: sessionId }) : Promise.resolve();
+    };
+
+    const syncFromNative = async (sessionId: string) => {
+      const { value: token } = await ClerkPlugin.getClientToken();
+      if (token && token.length > 0) {
+        await tokenCache.saveToken(CLERK_CLIENT_JWT_KEY, token);
+      }
+      await setActiveOnClerk(sessionId);
+    };
+
     const subscribe = async () => {
+      // Initial sync: if the native SDK has a session at mount-time (e.g., user
+      // signed in on a previous app launch and the session is restored from
+      // Keychain), push it into clerk-js so useUser() reflects it without a
+      // fresh sign-in event.
+      try {
+        const session = await ClerkPlugin.getSession();
+        if (isMountedRef.current && session?.sessionId) {
+          await syncFromNative(session.sessionId);
+        }
+      } catch (err) {
+        if (typeof console !== 'undefined') {
+          console.warn('[capacitor-clerk] initial native sync failed:', err);
+        }
+      }
+
+      // Then subscribe to live auth-state changes for sign-in / sign-out.
       listener = await ClerkPlugin.addListener('authStateChange', async (event: AuthStateChangeEvent) => {
         if (!isMountedRef.current) return;
         try {
           if (event.type === 'signedIn' && event.sessionId) {
-            const { value: token } = await ClerkPlugin.getClientToken();
-            if (token && token.length > 0) {
-              await tokenCache.saveToken(CLERK_CLIENT_JWT_KEY, token);
-            }
-            const setActive = (
-              clerk as unknown as {
-                setActive?: (opts: { session: string }) => Promise<void>;
-              }
-            ).setActive;
-            if (setActive) {
-              await setActive({ session: event.sessionId });
-            }
+            await syncFromNative(event.sessionId);
           } else if (event.type === 'signedOut') {
             try {
               await clerk.signOut();
