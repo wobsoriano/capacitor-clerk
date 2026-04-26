@@ -1,6 +1,6 @@
-// Re-exports from @clerk/react. Available everywhere because clerk-js runs in
-// the JS thread on web; on native (Plans 2-4) the same hooks read from a
-// clerk-js instance synced bidirectionally with the native module.
+// Re-exports from @clerk/react. clerk-js runs in the JS thread on web; on
+// native (Plan 4) we share the same instance via the singleton in src/singleton.ts
+// so these hooks and components reflect the same session as the native bridge.
 export {
   useClerk,
   useAuth,
@@ -21,14 +21,27 @@ export {
   // <Show when="signed-out"> ... </Show>
   // <Show when={{ permission: "..." }}> ... </Show>
   Show,
+  // Pre-built UI components from clerk-react. We re-export them rather than
+  // wrap them so consumers get the canonical Clerk experience on web. On
+  // native (Plan 4), an override layer can swap these for native-bridge
+  // variants when running on iOS/Android.
+  UserButton,
+  UserProfile,
+  SignIn,
+  SignUp,
+  SignInButton,
+  SignUpButton,
+  SignOutButton,
+  OrganizationProfile,
+  OrganizationSwitcher,
+  OrganizationList,
+  CreateOrganization,
 } from '@clerk/react';
 export type { ShowProps } from '@clerk/react';
 
 // Capacitor-specific exports.
 export { ClerkProvider } from './ClerkProvider';
 export type { ClerkProviderProps } from './ClerkProvider';
-export { UserButton } from './UserButton';
-export type { UserButtonProps } from './UserButton';
 
 // Useful types from the plugin core, re-exported here so consumers do not
 // need a second import path for them.

@@ -1,24 +1,29 @@
 import { WebPlugin } from '@capacitor/core';
-import type { Clerk as ClerkType } from '@clerk/clerk-js';
 
 import type { AuthResult, AuthStateChangeEvent, ClerkPluginInterface, NativeSessionSnapshot } from './definitions';
+import { getClerkSingleton, setClerkSingleton } from './singleton';
 
 const CLIENT_JWT_STORAGE_KEY = '__clerk_client_jwt';
 
 export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
-  private clerk: ClerkType | null = null;
   private unsubscribeFromClerk: (() => void) | null = null;
 
   async configure({ publishableKey }: { publishableKey: string; bearerToken?: string | null }): Promise<void> {
-    if (this.clerk) return; // idempotent, second call is a no-op
+    let clerk = getClerkSingleton();
+    if (!clerk) {
+      const { Clerk } = await import('@clerk/clerk-js');
+      clerk = new Clerk(publishableKey);
+      setClerkSingleton(clerk, publishableKey);
+    }
 
-    const { Clerk } = await import('@clerk/clerk-js');
-    this.clerk = new Clerk(publishableKey);
-    await this.clerk.load();
+    // load() is idempotent inside clerk-js; calling it twice is safe and gives
+    // us a guarantee that the UI bundle is mounted before presentAuth() etc.
+    await clerk.load();
 
     // Bridge clerk-js's listener to our plugin event so consumers using
     // ClerkPlugin.addListener('authStateChange', ...) see the same updates.
-    this.unsubscribeFromClerk = this.clerk.addListener(
+    if (this.unsubscribeFromClerk) this.unsubscribeFromClerk();
+    this.unsubscribeFromClerk = clerk.addListener(
       ({ session }) => {
         const event: AuthStateChangeEvent = {
           type: session ? 'signedIn' : 'signedOut',
@@ -29,16 +34,13 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
       },
       { skipInitialEmit: true },
     );
-
-    // Reference the field to satisfy noUnusedLocals; later tasks call it on teardown.
-    void this.unsubscribeFromClerk;
   }
 
   async presentAuth(options?: {
     mode?: 'signIn' | 'signUp' | 'signInOrUp';
     dismissable?: boolean;
   }): Promise<AuthResult> {
-    const clerk = this.clerk;
+    const clerk = getClerkSingleton();
     if (!clerk) throw new Error('configure() must be called first');
 
     const mode = options?.mode ?? 'signInOrUp';
@@ -81,12 +83,13 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
   }
 
   async presentUserProfile(_options?: { dismissable?: boolean }): Promise<void> {
-    if (!this.clerk) throw new Error('configure() must be called first');
-    this.clerk.openUserProfile();
+    const clerk = getClerkSingleton();
+    if (!clerk) throw new Error('configure() must be called first');
+    clerk.openUserProfile();
   }
 
   async getSession(): Promise<NativeSessionSnapshot | null> {
-    const clerk = this.clerk;
+    const clerk = getClerkSingleton();
     if (!clerk) throw new Error('configure() must be called first');
     const s = clerk.session;
     if (!s?.user) return null;
@@ -105,7 +108,7 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
   }
 
   async getClientToken(): Promise<string | null> {
-    const clerk = this.clerk;
+    const clerk = getClerkSingleton();
     if (!clerk) throw new Error('configure() must be called first');
     const session = clerk.session;
     if (!session) return null;
@@ -113,7 +116,7 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
   }
 
   async signOut(): Promise<void> {
-    const clerk = this.clerk;
+    const clerk = getClerkSingleton();
     if (!clerk) throw new Error('configure() must be called first');
     await clerk.signOut();
   }

@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthStateChangeEvent } from '../definitions';
+import { clearClerkSingleton, getClerkSingleton } from '../singleton';
 import { ClerkPluginWeb } from '../web';
 
 // Hoisted mock for @clerk/clerk-js. The factory creates a fake Clerk class
@@ -23,27 +24,46 @@ const { ClerkMock, listenerRefs } = vi.hoisted(() => {
 
 vi.mock('@clerk/clerk-js', () => ({ Clerk: ClerkMock }));
 
+// Reset the singleton between tests so each test gets a fresh FakeClerk.
+beforeEach(() => {
+  clearClerkSingleton();
+});
+
 afterEach(() => {
   listenerRefs.length = 0;
   vi.clearAllMocks();
 });
+
+function getMockClerk(): {
+  session: any;
+  addListener: ReturnType<typeof vi.fn>;
+  load: ReturnType<typeof vi.fn>;
+  openSignIn?: ReturnType<typeof vi.fn>;
+  openSignUp?: ReturnType<typeof vi.fn>;
+  openUserProfile?: ReturnType<typeof vi.fn>;
+  signOut?: ReturnType<typeof vi.fn>;
+} {
+  const c = getClerkSingleton();
+  if (!c) throw new Error('singleton not populated; did configure() run?');
+  return c as any;
+}
 
 describe('ClerkPluginWeb.configure', () => {
   it('creates a Clerk instance and calls load()', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
 
-    // The mock's load is called once.
     expect(listenerRefs.length).toBe(1);
+    expect(getMockClerk().load).toHaveBeenCalled();
   });
 
-  it('is idempotent on a second call', async () => {
+  it('reuses the singleton on a second call', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
+    const first = getClerkSingleton();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-
-    // Still only one listener subscribed.
-    expect(listenerRefs.length).toBe(1);
+    const second = getClerkSingleton();
+    expect(first).toBe(second);
   });
 
   it('bridges clerk-js listener to authStateChange event', async () => {
@@ -53,9 +73,7 @@ describe('ClerkPluginWeb.configure', () => {
     const events: AuthStateChangeEvent[] = [];
     const handle = await plugin.addListener('authStateChange', (e) => events.push(e));
 
-    // Simulate clerk-js emitting "signed in"
     listenerRefs[0]({ session: { id: 'sess_1', user: { id: 'user_1' } } });
-    // and "signed out"
     listenerRefs[0]({ session: null });
 
     expect(events).toEqual([
@@ -72,20 +90,15 @@ describe('ClerkPluginWeb.presentAuth', () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
 
-    // Add openSignIn / openSignUp to the mocked instance for this test.
-    const internal = plugin as unknown as {
-      clerk: { openSignIn: ReturnType<typeof vi.fn>; openSignUp: ReturnType<typeof vi.fn> };
-    };
-    internal.clerk.openSignIn = vi.fn();
-    internal.clerk.openSignUp = vi.fn();
+    const mock = getMockClerk();
+    mock.openSignIn = vi.fn();
+    mock.openSignUp = vi.fn();
 
-    // Fire-and-forget: the Promise only resolves on session, which we'll trigger.
     const authPromise = plugin.presentAuth({ mode: 'signInOrUp' });
 
-    expect(internal.clerk.openSignIn).toHaveBeenCalledOnce();
-    expect(internal.clerk.openSignUp).not.toHaveBeenCalled();
+    expect(mock.openSignIn).toHaveBeenCalledOnce();
+    expect(mock.openSignUp).not.toHaveBeenCalled();
 
-    // Drive the most recent listener (the one presentAuth subscribed) with a session.
     listenerRefs[listenerRefs.length - 1]({
       session: { id: 'sess_2', user: { id: 'user_2' } },
     });
@@ -101,16 +114,14 @@ describe('ClerkPluginWeb.presentAuth', () => {
   it('calls openSignUp for signUp mode', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const internal = plugin as unknown as {
-      clerk: { openSignIn: ReturnType<typeof vi.fn>; openSignUp: ReturnType<typeof vi.fn> };
-    };
-    internal.clerk.openSignIn = vi.fn();
-    internal.clerk.openSignUp = vi.fn();
+    const mock = getMockClerk();
+    mock.openSignIn = vi.fn();
+    mock.openSignUp = vi.fn();
 
     void plugin.presentAuth({ mode: 'signUp' });
 
-    expect(internal.clerk.openSignUp).toHaveBeenCalledOnce();
-    expect(internal.clerk.openSignIn).not.toHaveBeenCalled();
+    expect(mock.openSignUp).toHaveBeenCalledOnce();
+    expect(mock.openSignIn).not.toHaveBeenCalled();
   });
 });
 
@@ -118,14 +129,12 @@ describe('ClerkPluginWeb.presentUserProfile', () => {
   it('calls openUserProfile', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const internal = plugin as unknown as {
-      clerk: { openUserProfile: ReturnType<typeof vi.fn> };
-    };
-    internal.clerk.openUserProfile = vi.fn();
+    const mock = getMockClerk();
+    mock.openUserProfile = vi.fn();
 
     await plugin.presentUserProfile();
 
-    expect(internal.clerk.openUserProfile).toHaveBeenCalledOnce();
+    expect(mock.openUserProfile).toHaveBeenCalledOnce();
   });
 });
 
@@ -133,16 +142,14 @@ describe('ClerkPluginWeb.getSession', () => {
   it('returns null when no session', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const internal = plugin as unknown as { clerk: { session: unknown } };
-    internal.clerk.session = null;
+    getMockClerk().session = null;
     expect(await plugin.getSession()).toBeNull();
   });
 
   it('returns a NativeSessionSnapshot when signed in', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const internal = plugin as unknown as { clerk: { session: unknown } };
-    internal.clerk.session = {
+    getMockClerk().session = {
       id: 'sess_1',
       user: {
         id: 'user_1',
@@ -170,16 +177,14 @@ describe('ClerkPluginWeb.getClientToken', () => {
   it('returns null when no session', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const internal = plugin as unknown as { clerk: { session: unknown } };
-    internal.clerk.session = null;
+    getMockClerk().session = null;
     expect(await plugin.getClientToken()).toBeNull();
   });
 
   it('returns the JWT from session.getToken()', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const internal = plugin as unknown as { clerk: { session: { getToken: () => Promise<string> } } };
-    internal.clerk.session = { getToken: vi.fn().mockResolvedValue('eyJhbGc...') };
+    getMockClerk().session = { getToken: vi.fn().mockResolvedValue('eyJhbGc...') };
     expect(await plugin.getClientToken()).toBe('eyJhbGc...');
   });
 });
@@ -188,10 +193,10 @@ describe('ClerkPluginWeb.signOut', () => {
   it('calls clerk.signOut()', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const internal = plugin as unknown as { clerk: { signOut: () => Promise<void> } };
-    internal.clerk.signOut = vi.fn().mockResolvedValue(undefined);
+    const mock = getMockClerk();
+    mock.signOut = vi.fn().mockResolvedValue(undefined);
     await plugin.signOut();
-    expect(internal.clerk.signOut).toHaveBeenCalledOnce();
+    expect(mock.signOut).toHaveBeenCalledOnce();
   });
 });
 
