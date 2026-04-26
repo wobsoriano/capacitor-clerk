@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import type { Clerk as ClerkType } from '@clerk/clerk-js';
 
 import type { TokenCache } from '../definitions';
@@ -11,25 +12,28 @@ import {
 export interface CreateClerkInstanceOptions {
   publishableKey: string;
   tokenCache: TokenCache;
+  /**
+   * Optional: a string identifier for this consumer; sent as
+   * `x-capacitor-sdk-version` for telemetry. Defaults to undefined.
+   */
+  sdkVersion?: string;
 }
+
+export const CLERK_CLIENT_JWT_KEY = '__clerk_client_jwt';
 
 /**
  * Higher-order factory that takes the Clerk class and returns a function for
- * creating singleton Clerk instances. Mirrors @clerk/expo's pattern of passing
- * the class so tests can inject a fake.
+ * creating singleton Clerk instances.
  *
- * The instance is shared with ClerkPluginWeb via `src/singleton.ts`, so plugin
- * methods like ClerkPlugin.signOut() and React hooks like useUser() always
- * reference the same clerk-js, the same UI bundle, and the same listeners.
- *
- * In Plan 1 we keep the structure but do not yet wire __internal_onBeforeRequest
- * for _is_native=1; that is added in Plan 4 once native bridges exist to sync with.
+ * On native platforms (iOS, Android), wires `__internal_onBeforeRequest` and
+ * `__internal_onAfterResponse` hooks so clerk-js can talk to Clerk's FAPI in
+ * "native mode": Bearer-token auth via `?_is_native=1`, no cookies.
+ * Verified against `clerk_go/api/fapi/v1/router/cors.go` (CORS allows any
+ * origin) and `client_type_middleware.go:22-24` (Capacitor explicitly supported).
  */
-export function createClerkInstance(
-  ClerkClass: typeof ClerkType,
-): (options: CreateClerkInstanceOptions) => ClerkType {
+export function createClerkInstance(ClerkClass: typeof ClerkType): (options: CreateClerkInstanceOptions) => ClerkType {
   return (options: CreateClerkInstanceOptions): ClerkType => {
-    const { publishableKey, tokenCache } = options;
+    const { publishableKey, tokenCache, sdkVersion } = options;
 
     const existing = getClerkSingleton();
     const existingKey = getClerkSingletonPublishableKey();
@@ -37,20 +41,59 @@ export function createClerkInstance(
       throw new Error('Missing Clerk publishable key');
     }
 
-    if (!existing || existingKey !== publishableKey) {
-      const clerk = new ClerkClass(publishableKey);
-      // Plan 4 will add __internal_onBeforeRequest hook here that injects
-      // _is_native=1, Authorization, x-mobile, x-capacitor-sdk-version when
-      // running on native. tokenCache is captured for that purpose.
-      // Plan 4 will also add __internal_onAfterResponse hook to save rotated
-      // JWT back to tokenCache.
-      void tokenCache;
-      setClerkSingleton(clerk, publishableKey);
-      return clerk;
+    if (existing && existingKey === publishableKey) {
+      return existing;
     }
 
-    return existing;
+    const clerk = new ClerkClass(publishableKey);
+
+    if (Capacitor.isNativePlatform()) {
+      attachNativeRequestHooks(clerk, tokenCache, sdkVersion);
+    }
+
+    setClerkSingleton(clerk, publishableKey);
+    return clerk;
   };
+}
+
+/**
+ * Wire `__internal_onBeforeRequest` and `__internal_onAfterResponse` hooks
+ * to enable Bearer-token auth and `_is_native=1` mode. Only call on native
+ * platforms; on web this would break cookie-based auth.
+ */
+function attachNativeRequestHooks(clerk: ClerkType, tokenCache: TokenCache, sdkVersion: string | undefined): void {
+  const onBeforeRequest = (
+    clerk as unknown as {
+      __internal_onBeforeRequest: (
+        cb: (req: { credentials?: RequestCredentials; url?: URL; headers?: Headers }) => Promise<void>,
+      ) => void;
+    }
+  ).__internal_onBeforeRequest;
+  const onAfterResponse = (
+    clerk as unknown as {
+      __internal_onAfterResponse: (cb: (req: unknown, res: Response) => Promise<void>) => void;
+    }
+  ).__internal_onAfterResponse;
+
+  onBeforeRequest(async (req) => {
+    req.credentials = 'omit';
+    req.url?.searchParams.append('_is_native', '1');
+    const jwt = await tokenCache.getToken(CLERK_CLIENT_JWT_KEY);
+    if (jwt) {
+      (req.headers as Headers).set('authorization', jwt);
+    }
+    (req.headers as Headers).set('x-mobile', '1');
+    if (sdkVersion) {
+      (req.headers as Headers).set('x-capacitor-sdk-version', sdkVersion);
+    }
+  });
+
+  onAfterResponse(async (_req, res) => {
+    const auth = res.headers.get('authorization');
+    if (auth) {
+      await tokenCache.saveToken(CLERK_CLIENT_JWT_KEY, auth);
+    }
+  });
 }
 
 /**
