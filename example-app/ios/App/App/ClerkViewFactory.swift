@@ -23,12 +23,19 @@ import SwiftUI
 import UIKit
 
 class ClerkViewFactory: ClerkViewFactoryProtocol {
+    /// `Clerk.shared` traps if accessed before `Clerk.configure` is called.
+    /// We track our own configured-flag so query methods (getSession,
+    /// getClientToken, signOut) can return safe nil/no-ops if called early
+    /// (e.g., during a JS-side useEffect race on app launch).
+    private static var isConfigured = false
+
     func configure(publishableKey: String, bearerToken: String?) async throws {
         // `Clerk.configure` is synchronous in clerk-ios 1.x, MainActor-isolated,
         // and idempotent (subsequent calls log a warning and return the existing
         // instance).
         await MainActor.run {
             _ = Clerk.configure(publishableKey: publishableKey)
+            ClerkViewFactory.isConfigured = true
         }
         // Plan 4 will use bearerToken to seed the SDK with a JS-acquired session
         // (see capacitor-clerk's NativeSessionSync). Until then, this is a hint.
@@ -68,7 +75,8 @@ class ClerkViewFactory: ClerkViewFactoryProtocol {
     }
 
     func getSession() async -> [String: Any]? {
-        await MainActor.run {
+        guard ClerkViewFactory.isConfigured else { return nil }
+        return await MainActor.run {
             guard let session = Clerk.shared.session,
                   let user = session.user else { return nil }
             return [
@@ -86,15 +94,15 @@ class ClerkViewFactory: ClerkViewFactoryProtocol {
     }
 
     func getClientToken() async -> String? {
+        guard ClerkViewFactory.isConfigured else { return nil }
         guard let session = await MainActor.run(body: { Clerk.shared.session }) else {
             return nil
         }
-        // Session.getToken() is async; lastActiveToken is only populated after
-        // a token has been fetched, so go through the canonical API.
         return try? await session.getToken()
     }
 
     func signOut() async throws {
+        guard ClerkViewFactory.isConfigured else { return }
         try await Clerk.shared.auth.signOut()
     }
 
