@@ -15,6 +15,21 @@ const baseConfig = {
   external,
 };
 
+// Declarations are emitted by `tsc` (run before rollup). rollup-plugin-typescript2
+// would otherwise re-emit .d.ts files into a parallel tree (dist/react/, etc.) and
+// clobber tsc's correctly-resolved declarations under dist/esm/. We turn off
+// declaration emission here to keep the two passes isolated.
+const tsPluginOptions = {
+  tsconfig: 'tsconfig.json',
+  include: ['src/**/*.ts', 'src/**/*.tsx'],
+  tsconfigOverride: {
+    compilerOptions: {
+      declaration: false,
+      declarationMap: false,
+    },
+  },
+};
+
 export default [
   // Main entry
   {
@@ -36,14 +51,7 @@ export default [
         inlineDynamicImports: true,
       },
     ],
-    plugins: [
-      typescript({
-        tsconfig: 'tsconfig.json',
-        useTsconfigDeclarationDir: false,
-        clean: true,
-        include: ['src/**/*.ts', 'src/**/*.tsx'],
-      }),
-    ],
+    plugins: [typescript({ ...tsPluginOptions, clean: true })],
   },
   // React subpath
   {
@@ -55,7 +63,7 @@ export default [
       sourcemap: true,
       inlineDynamicImports: true,
     },
-    plugins: [typescript({ tsconfig: 'tsconfig.json', include: ['src/**/*.ts', 'src/**/*.tsx'] })],
+    plugins: [typescript(tsPluginOptions)],
   },
   // Token cache subpath
   {
@@ -67,6 +75,6 @@ export default [
       sourcemap: true,
       inlineDynamicImports: true,
     },
-    plugins: [typescript({ tsconfig: 'tsconfig.json', include: ['src/**/*.ts', 'src/**/*.tsx'] })],
+    plugins: [typescript(tsPluginOptions)],
   },
 ];
