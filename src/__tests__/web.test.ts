@@ -128,3 +128,69 @@ describe('ClerkPluginWeb.presentUserProfile', () => {
     expect(internal.clerk.openUserProfile).toHaveBeenCalledOnce();
   });
 });
+
+describe('ClerkPluginWeb.getSession', () => {
+  it('returns null when no session', async () => {
+    const plugin = new ClerkPluginWeb();
+    await plugin.configure({ publishableKey: 'pk_test_xxx' });
+    const internal = plugin as unknown as { clerk: { session: unknown } };
+    internal.clerk.session = null;
+    expect(await plugin.getSession()).toBeNull();
+  });
+
+  it('returns a NativeSessionSnapshot when signed in', async () => {
+    const plugin = new ClerkPluginWeb();
+    await plugin.configure({ publishableKey: 'pk_test_xxx' });
+    const internal = plugin as unknown as { clerk: { session: unknown } };
+    internal.clerk.session = {
+      id: 'sess_1',
+      user: {
+        id: 'user_1',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        primaryEmailAddress: { emailAddress: 'ada@example.com' },
+        imageUrl: 'https://example.com/ada.png',
+      },
+    };
+    expect(await plugin.getSession()).toEqual({
+      sessionId: 'sess_1',
+      userId: 'user_1',
+      user: {
+        id: 'user_1',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        primaryEmailAddress: 'ada@example.com',
+        imageUrl: 'https://example.com/ada.png',
+      },
+    });
+  });
+});
+
+describe('ClerkPluginWeb.getClientToken', () => {
+  it('returns null when no session', async () => {
+    const plugin = new ClerkPluginWeb();
+    await plugin.configure({ publishableKey: 'pk_test_xxx' });
+    const internal = plugin as unknown as { clerk: { session: unknown } };
+    internal.clerk.session = null;
+    expect(await plugin.getClientToken()).toBeNull();
+  });
+
+  it('returns the JWT from session.getToken()', async () => {
+    const plugin = new ClerkPluginWeb();
+    await plugin.configure({ publishableKey: 'pk_test_xxx' });
+    const internal = plugin as unknown as { clerk: { session: { getToken: () => Promise<string> } } };
+    internal.clerk.session = { getToken: vi.fn().mockResolvedValue('eyJhbGc...') };
+    expect(await plugin.getClientToken()).toBe('eyJhbGc...');
+  });
+});
+
+describe('ClerkPluginWeb.signOut', () => {
+  it('calls clerk.signOut()', async () => {
+    const plugin = new ClerkPluginWeb();
+    await plugin.configure({ publishableKey: 'pk_test_xxx' });
+    const internal = plugin as unknown as { clerk: { signOut: () => Promise<void> } };
+    internal.clerk.signOut = vi.fn().mockResolvedValue(undefined);
+    await plugin.signOut();
+    expect(internal.clerk.signOut).toHaveBeenCalledOnce();
+  });
+});

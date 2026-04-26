@@ -86,15 +86,36 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
   }
 
   async getSession(): Promise<NativeSessionSnapshot | null> {
-    throw this.unimplemented('getSession not implemented yet');
+    const clerk = this.clerk;
+    if (!clerk) throw new Error('configure() must be called first');
+    const s = clerk.session;
+    if (!s?.user) return null;
+    const u = s.user;
+    return {
+      sessionId: s.id,
+      userId: u.id,
+      user: {
+        id: u.id,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        primaryEmailAddress: u.primaryEmailAddress?.emailAddress ?? null,
+        imageUrl: u.imageUrl,
+      },
+    };
   }
 
   async getClientToken(): Promise<string | null> {
-    throw this.unimplemented('getClientToken not implemented yet');
+    const clerk = this.clerk;
+    if (!clerk) throw new Error('configure() must be called first');
+    const session = clerk.session;
+    if (!session) return null;
+    return (await session.getToken()) ?? null;
   }
 
   async signOut(): Promise<void> {
-    throw this.unimplemented('signOut not implemented yet');
+    const clerk = this.clerk;
+    if (!clerk) throw new Error('configure() must be called first');
+    await clerk.signOut();
   }
 
   async secureGet(_options: { key: string }): Promise<{ value: string | null }> {
