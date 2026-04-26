@@ -66,6 +66,3 @@ describe('ClerkPluginWeb.configure', () => {
     await handle.remove();
   });
 });
-
-// Suppress unused-import warning for ClerkType (used in mock typing only).
-void ({} as ClerkType);
