@@ -1,5 +1,3 @@
-/// <reference types="@capacitor/cli" />
-
 import type { PluginListenerHandle } from '@capacitor/core';
 
 /**
@@ -164,20 +162,3 @@ export interface ClerkPluginInterface {
   removeAllListeners(): Promise<void>;
 }
 
-/**
- * Typed slot in capacitor.config.ts for static configuration. Optional ;
- * runtime configure() via <ClerkProvider> is the recommended path.
- */
-declare module '@capacitor/cli' {
-  export interface PluginsConfig {
-    ClerkPlugin?: {
-      /**
-       * Clerk publishable key. Optional. Most apps configure at runtime via
-       * <ClerkProvider publishableKey={...}>.
-       *
-       * @example "pk_test_xxx"
-       */
-      publishableKey?: string;
-    };
-  }
-}
