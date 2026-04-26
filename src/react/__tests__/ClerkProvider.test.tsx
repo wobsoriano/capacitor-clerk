@@ -47,7 +47,7 @@ describe('<ClerkProvider>', () => {
     );
     const last = recordedProps[recordedProps.length - 1];
     expect(last.publishableKey).toBe('pk_test_xxx');
-    expect(last.clerk).toBeDefined();
+    expect(last.Clerk).toBeDefined();
   });
 
   it('calls ClerkPlugin.configure on mount with the publishableKey', () => {
