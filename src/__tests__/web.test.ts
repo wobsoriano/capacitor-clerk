@@ -139,18 +139,18 @@ describe('ClerkPluginWeb.getSession', () => {
 });
 
 describe('ClerkPluginWeb.getClientToken', () => {
-  it('returns null when no session', async () => {
+  it('returns { value: null } when no session', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
     getMockClerk().session = null;
-    expect(await plugin.getClientToken()).toBeNull();
+    expect(await plugin.getClientToken()).toEqual({ value: null });
   });
 
-  it('returns the JWT from session.getToken()', async () => {
+  it('returns the JWT wrapped in { value }', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
     getMockClerk().session = { getToken: vi.fn().mockResolvedValue('eyJhbGc...') };
-    expect(await plugin.getClientToken()).toBe('eyJhbGc...');
+    expect(await plugin.getClientToken()).toEqual({ value: 'eyJhbGc...' });
   });
 });
 

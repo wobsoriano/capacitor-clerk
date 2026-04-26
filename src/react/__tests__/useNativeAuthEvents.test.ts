@@ -78,7 +78,7 @@ describe('useNativeAuthEvents', () => {
     const signOut = vi.fn();
     const clerk = { setActive, signOut } as unknown as never;
 
-    (ClerkPlugin.getClientToken as ReturnType<typeof vi.fn>).mockResolvedValue('eyJtoken');
+    (ClerkPlugin.getClientToken as ReturnType<typeof vi.fn>).mockResolvedValue({ value: 'eyJtoken' });
 
     renderHook(() => useNativeAuthEvents({ clerk, tokenCache }));
     await waitFor(() => expect(eventCallbacks.authStateChange).toBeDefined());

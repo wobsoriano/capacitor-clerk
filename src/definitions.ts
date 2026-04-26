@@ -99,11 +99,13 @@ export interface ClerkPluginInterface {
   getSession(): Promise<NativeSessionSnapshot | null>;
 
   /**
-   * Returns the current session's JWT, or null if no session is active.
+   * Returns the current session's JWT (wrapped in { value }), or { value: null }
+   * if no session is active. Wrapped per Capacitor convention so the shape
+   * is consistent across native bridges and the web fallback.
    *
    * @since 0.1.0
    */
-  getClientToken(): Promise<string | null>;
+  getClientToken(): Promise<{ value: string | null }>;
 
   /**
    * Sign out the current user.

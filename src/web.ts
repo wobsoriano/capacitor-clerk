@@ -79,12 +79,12 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
     };
   }
 
-  async getClientToken(): Promise<string | null> {
+  async getClientToken(): Promise<{ value: string | null }> {
     const clerk = getClerkSingleton();
     if (!clerk) throw new Error('configure() must be called first');
     const session = clerk.session;
-    if (!session) return null;
-    return (await session.getToken()) ?? null;
+    if (!session) return { value: null };
+    return { value: (await session.getToken()) ?? null };
   }
 
   async signOut(): Promise<void> {

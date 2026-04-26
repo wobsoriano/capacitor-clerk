@@ -40,7 +40,7 @@ export function useNativeAuthEvents({ clerk, tokenCache }: UseNativeAuthEventsOp
         if (!isMountedRef.current) return;
         try {
           if (event.type === 'signedIn' && event.sessionId) {
-            const token = await ClerkPlugin.getClientToken();
+            const { value: token } = await ClerkPlugin.getClientToken();
             if (token && token.length > 0) {
               await tokenCache.saveToken(CLERK_CLIENT_JWT_KEY, token);
             }
