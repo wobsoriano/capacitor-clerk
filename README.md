@@ -2,7 +2,7 @@
 
 Capacitor plugin for [Clerk](https://clerk.com) authentication. Bridges Clerk's native iOS and Android SDKs into Capacitor apps and exposes a `@clerk/react`-compatible JS surface in the WebView.
 
-> **Status**: v0.1.0 (Plan 1 complete). Web platform implementation and base React layer are working. iOS bridge (Plan 2), Android bridge (Plan 3), and native sync (Plan 4) are in progress.
+> **Status**: v0.1.0, web platform working, iOS bridge with native ↔ JS state sync working, Android bridge in progress (Plan 3).
 
 ## Install
 
