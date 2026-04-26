@@ -97,6 +97,25 @@ function NativeSyncBridge({
   useEffect(() => {
     let cancelled = false;
 
+    const waitForClerkLoaded = async (timeoutMs = 5000) => {
+      const start = Date.now();
+      const c = clerk as unknown as {
+        loaded?: boolean;
+        addOnLoaded?: (cb: () => void) => void;
+      };
+      if (c.loaded) return;
+      if (typeof c.addOnLoaded === 'function') {
+        await new Promise<void>((resolve) => {
+          c.addOnLoaded!(() => resolve());
+        });
+        return;
+      }
+      // Fallback: poll for clerk.loaded.
+      while (!c.loaded && Date.now() - start < timeoutMs) {
+        await new Promise((r) => setTimeout(r, 50));
+      }
+    };
+
     const bootstrap = async () => {
       try {
         // Pre-load any cached JS bearer token so configure can seed native with it.
@@ -120,18 +139,34 @@ function NativeSyncBridge({
         }
         if (cancelled) return;
 
-        // Push the session id into clerk-js.
-        const setActive = (
-          clerk as unknown as {
-            setActive?: (opts: { session: string }) => Promise<void>;
-          }
-        ).setActive;
-        if (setActive) {
-          await setActive({ session: session.sessionId });
+        // Wait for clerk-js to finish its initial load (it runs in parallel
+        // with this bootstrap, kicked off by InternalClerkProvider).
+        await waitForClerkLoaded();
+        if (cancelled) return;
+
+        const internal = clerk as unknown as {
+          client?: { sessions?: Array<{ id: string }> };
+          __internal_reloadInitialResources?: () => Promise<void>;
+          setActive?: (opts: { session: string }) => Promise<void>;
+        };
+
+        // If clerk-js's client doesn't already know about the native session,
+        // reload its resources so FAPI returns the new session list (now that
+        // the bearer token is in tokenCache and onBeforeRequest can use it).
+        const sessionInClient = internal.client?.sessions?.some((s) => s.id === session.sessionId);
+        if (!sessionInClient && typeof internal.__internal_reloadInitialResources === 'function') {
+          await internal.__internal_reloadInitialResources();
+        }
+        if (cancelled) return;
+
+        if (internal.setActive) {
+          await internal.setActive({ session: session.sessionId });
         }
       } catch (err) {
         if (typeof console !== 'undefined') {
-          console.warn('[capacitor-clerk] native bootstrap failed:', err);
+          const msg =
+            err instanceof Error ? err.message : typeof err === 'string' ? err : JSON.stringify(err);
+          console.warn('[capacitor-clerk] native bootstrap failed:', msg, err);
         }
       }
     };
