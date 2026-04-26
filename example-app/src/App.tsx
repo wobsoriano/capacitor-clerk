@@ -9,7 +9,7 @@ export function App({ publishableKey }: { publishableKey: string }) {
     <ClerkProvider publishableKey={publishableKey}>
       <main style={{ fontFamily: 'system-ui', padding: 24, maxWidth: 600, margin: '0 auto' }}>
         <h1>capacitor-clerk demo</h1>
-        <p>Plan {isNative ? '2 (native iOS)' : '1 (web)'} smoke test.</p>
+        <p>Plan 4 (native sync), sign in flips state automatically.</p>
 
         <Show when="signed-out">
           {isNative ? (
@@ -17,36 +17,26 @@ export function App({ publishableKey }: { publishableKey: string }) {
               onClick={() => void ClerkPlugin.presentAuth({ mode: 'signInOrUp' })}
               style={{ padding: '8px 16px', fontSize: 16 }}
             >
-              Sign in / Sign up (native modal)
+              Sign in / Sign up (native)
             </button>
           ) : (
             <SignInButton mode="modal">
-              <button style={{ padding: '8px 16px', fontSize: 16 }}>Sign in / Sign up (web modal)</button>
+              <button style={{ padding: '8px 16px', fontSize: 16 }}>Sign in / Sign up (web)</button>
             </SignInButton>
           )}
         </Show>
 
         <Show when="signed-in">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {isNative ? (
-              <button
-                onClick={() => void ClerkPlugin.presentUserProfile()}
-                style={{ width: 40, height: 40, borderRadius: '50%', border: 0, background: '#6366f1', color: 'white' }}
-                aria-label="User profile"
-              >
-                ⌘
-              </button>
-            ) : (
-              <UserButton />
-            )}
+            <UserButton />
             <Greeting />
           </div>
           <div style={{ marginTop: 16 }}>
             {isNative ? (
-              <button onClick={() => void ClerkPlugin.signOut()}>Sign out</button>
+              <button onClick={() => void ClerkPlugin.signOut()}>Sign out (native)</button>
             ) : (
               <SignOutButton>
-                <button>Sign out</button>
+                <button>Sign out (web)</button>
               </SignOutButton>
             )}
           </div>
