@@ -118,16 +118,16 @@ export class ClerkPluginWeb extends WebPlugin implements ClerkPluginInterface {
     await clerk.signOut();
   }
 
-  async secureGet(_options: { key: string }): Promise<{ value: string | null }> {
-    throw this.unimplemented('secureGet not implemented yet');
+  async secureGet({ key }: { key: string }): Promise<{ value: string | null }> {
+    return { value: localStorage.getItem(key) };
   }
 
-  async secureSet(_options: { key: string; value: string }): Promise<void> {
-    throw this.unimplemented('secureSet not implemented yet');
+  async secureSet({ key, value }: { key: string; value: string }): Promise<void> {
+    localStorage.setItem(key, value);
   }
 
-  async secureRemove(_options: { key: string }): Promise<void> {
-    throw this.unimplemented('secureRemove not implemented yet');
+  async secureRemove({ key }: { key: string }): Promise<void> {
+    localStorage.removeItem(key);
   }
 }
 

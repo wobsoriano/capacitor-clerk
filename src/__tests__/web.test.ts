@@ -194,3 +194,17 @@ describe('ClerkPluginWeb.signOut', () => {
     expect(internal.clerk.signOut).toHaveBeenCalledOnce();
   });
 });
+
+describe('ClerkPluginWeb.secureGet/Set/Remove', () => {
+  it('roundtrips via localStorage', async () => {
+    const plugin = new ClerkPluginWeb();
+
+    expect(await plugin.secureGet({ key: 'foo' })).toEqual({ value: null });
+
+    await plugin.secureSet({ key: 'foo', value: 'bar' });
+    expect(await plugin.secureGet({ key: 'foo' })).toEqual({ value: 'bar' });
+
+    await plugin.secureRemove({ key: 'foo' });
+    expect(await plugin.secureGet({ key: 'foo' })).toEqual({ value: null });
+  });
+});
