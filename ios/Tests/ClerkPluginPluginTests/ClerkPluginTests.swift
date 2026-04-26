@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClerkPluginPlugin
+@testable import CapacitorClerk
 
 final class KeychainStoreTests: XCTestCase {
     func testRoundtrip() throws {
