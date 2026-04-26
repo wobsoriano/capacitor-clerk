@@ -1,10 +1,4 @@
-import { ClerkPlugin } from 'capacitor-clerk';
-import {
-  ClerkProvider,
-  Show,
-  UserButton,
-  useUser,
-} from 'capacitor-clerk/react';
+import { ClerkProvider, Show, SignInButton, SignOutButton, UserButton, useUser } from 'capacitor-clerk/react';
 
 export function App({ publishableKey }: { publishableKey: string }) {
   return (
@@ -14,12 +8,9 @@ export function App({ publishableKey }: { publishableKey: string }) {
         <p>Plan 1: web platform smoke test.</p>
 
         <Show when="signed-out">
-          <button
-            onClick={() => void ClerkPlugin.presentAuth({ mode: 'signInOrUp' })}
-            style={{ padding: '8px 16px', fontSize: 16 }}
-          >
-            Sign in / Sign up
-          </button>
+          <SignInButton mode="modal">
+            <button style={{ padding: '8px 16px', fontSize: 16 }}>Sign in / Sign up</button>
+          </SignInButton>
         </Show>
 
         <Show when="signed-in">
@@ -28,7 +19,9 @@ export function App({ publishableKey }: { publishableKey: string }) {
             <Greeting />
           </div>
           <div style={{ marginTop: 16 }}>
-            <button onClick={() => void ClerkPlugin.signOut()}>Sign out</button>
+            <SignOutButton>
+              <button>Sign out</button>
+            </SignOutButton>
           </div>
         </Show>
       </main>

@@ -86,55 +86,20 @@ describe('ClerkPluginWeb.configure', () => {
 });
 
 describe('ClerkPluginWeb.presentAuth', () => {
-  it('calls openSignIn for signInOrUp mode', async () => {
+  it('throws unimplemented; consumers should use <SignInButton> instead', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
 
-    const mock = getMockClerk();
-    mock.openSignIn = vi.fn();
-    mock.openSignUp = vi.fn();
-
-    const authPromise = plugin.presentAuth({ mode: 'signInOrUp' });
-
-    expect(mock.openSignIn).toHaveBeenCalledOnce();
-    expect(mock.openSignUp).not.toHaveBeenCalled();
-
-    listenerRefs[listenerRefs.length - 1]({
-      session: { id: 'sess_2', user: { id: 'user_2' } },
-    });
-
-    const result = await authPromise;
-    expect(result).toEqual({
-      status: 'completed',
-      sessionId: 'sess_2',
-      userId: 'user_2',
-    });
-  });
-
-  it('calls openSignUp for signUp mode', async () => {
-    const plugin = new ClerkPluginWeb();
-    await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const mock = getMockClerk();
-    mock.openSignIn = vi.fn();
-    mock.openSignUp = vi.fn();
-
-    void plugin.presentAuth({ mode: 'signUp' });
-
-    expect(mock.openSignUp).toHaveBeenCalledOnce();
-    expect(mock.openSignIn).not.toHaveBeenCalled();
+    await expect(plugin.presentAuth()).rejects.toThrow(/not supported on web/);
   });
 });
 
 describe('ClerkPluginWeb.presentUserProfile', () => {
-  it('calls openUserProfile', async () => {
+  it('throws unimplemented; consumers should use <UserButton> instead', async () => {
     const plugin = new ClerkPluginWeb();
     await plugin.configure({ publishableKey: 'pk_test_xxx' });
-    const mock = getMockClerk();
-    mock.openUserProfile = vi.fn();
 
-    await plugin.presentUserProfile();
-
-    expect(mock.openUserProfile).toHaveBeenCalledOnce();
+    await expect(plugin.presentUserProfile()).rejects.toThrow(/not supported on web/);
   });
 });
 
