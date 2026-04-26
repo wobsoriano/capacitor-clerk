@@ -4,9 +4,7 @@ import type { PluginListenerHandle } from '@capacitor/core';
  * Result returned from `presentAuth()`. A discriminated union so consumers
  * are forced to handle both the completed and cancelled cases.
  */
-export type AuthResult =
-  | { status: 'completed'; sessionId: string; userId: string }
-  | { status: 'cancelled' };
+export type AuthResult = { status: 'completed'; sessionId: string; userId: string } | { status: 'cancelled' };
 
 /**
  * The native module's session shape. Distinct from clerk-js's richer
@@ -58,8 +56,7 @@ export const ClerkPluginErrors = {
   Unknown: 'E_UNKNOWN',
 } as const;
 
-export type ClerkPluginErrorCode =
-  (typeof ClerkPluginErrors)[keyof typeof ClerkPluginErrors];
+export type ClerkPluginErrorCode = (typeof ClerkPluginErrors)[keyof typeof ClerkPluginErrors];
 
 /**
  * The Capacitor plugin contract. All three platforms (iOS, Android, web)
@@ -72,10 +69,7 @@ export interface ClerkPluginInterface {
    *
    * @since 0.1.0
    */
-  configure(options: {
-    publishableKey: string;
-    bearerToken?: string | null;
-  }): Promise<void>;
+  configure(options: { publishableKey: string; bearerToken?: string | null }): Promise<void>;
 
   /**
    * Open the native (or web modal-overlay) sign-in/sign-up flow.
@@ -88,10 +82,7 @@ export interface ClerkPluginInterface {
    *
    * @since 0.1.0
    */
-  presentAuth(options?: {
-    mode?: 'signIn' | 'signUp' | 'signInOrUp';
-    dismissable?: boolean;
-  }): Promise<AuthResult>;
+  presentAuth(options?: { mode?: 'signIn' | 'signUp' | 'signInOrUp'; dismissable?: boolean }): Promise<AuthResult>;
 
   /**
    * Open the native (or web modal-overlay) user profile screen.
@@ -161,4 +152,3 @@ export interface ClerkPluginInterface {
    */
   removeAllListeners(): Promise<void>;
 }
-

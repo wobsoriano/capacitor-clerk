@@ -1,12 +1,7 @@
 import { WebPlugin } from '@capacitor/core';
 import type { Clerk as ClerkType } from '@clerk/clerk-js';
 
-import type {
-  AuthResult,
-  AuthStateChangeEvent,
-  ClerkPluginInterface,
-  NativeSessionSnapshot,
-} from './definitions';
+import type { AuthResult, AuthStateChangeEvent, ClerkPluginInterface, NativeSessionSnapshot } from './definitions';
 
 const CLIENT_JWT_STORAGE_KEY = '__clerk_client_jwt';
 
