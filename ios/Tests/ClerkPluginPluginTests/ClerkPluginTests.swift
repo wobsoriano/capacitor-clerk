@@ -1,15 +1,20 @@
 import XCTest
 @testable import ClerkPluginPlugin
 
-class ClerkPluginTests: XCTestCase {
-    func testEcho() {
-        // This is an example of a functional test case for a plugin.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+final class KeychainStoreTests: XCTestCase {
+    func testRoundtrip() throws {
+        let key = "test-key-\(UUID().uuidString)"
+        defer { KeychainStore.shared.remove(key: key) }
 
-        let implementation = ClerkPlugin()
-        let value = "Hello, World!"
-        let result = implementation.echo(value)
+        XCTAssertNil(KeychainStore.shared.get(key: key))
 
-        XCTAssertEqual(value, result)
+        KeychainStore.shared.set(key: key, value: "abc")
+        XCTAssertEqual(KeychainStore.shared.get(key: key), "abc")
+
+        KeychainStore.shared.set(key: key, value: "xyz")
+        XCTAssertEqual(KeychainStore.shared.get(key: key), "xyz")
+
+        KeychainStore.shared.remove(key: key)
+        XCTAssertNil(KeychainStore.shared.get(key: key))
     }
 }
