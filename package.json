@@ -59,6 +59,8 @@
   },
   "devDependencies": {
     "@aparajita/capacitor-secure-storage": "^8.0.0",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "^8.3.1",
     "@ionic/eslint-config": "^0.4.0",
     "@ionic/prettier-config": "^4.0.0",
@@ -79,9 +81,19 @@
   },
   "peerDependencies": {
     "@aparajita/capacitor-secure-storage": ">=8.0.0",
+    "@capacitor/app": ">=8.0.0",
+    "@capacitor/browser": ">=8.0.0",
     "@capacitor/core": ">=8.0.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@capacitor/app": {
+      "optional": true
+    },
+    "@capacitor/browser": {
+      "optional": true
+    }
   },
   "prettier": "@ionic/prettier-config",
   "eslintConfig": {

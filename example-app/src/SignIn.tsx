@@ -1,5 +1,8 @@
-import { useSignIn } from 'capacitor-clerk';
+import { useSignIn, useSSO } from 'capacitor-clerk';
 import { useState } from 'react';
+
+// Replace with your app's deep-link scheme registered in capacitor.config.json
+const SSO_REDIRECT_URL = 'capacitorclerk://sso-callback';
 
 interface SignInProps {
   onSwitchToSignUp: () => void;
@@ -7,8 +10,11 @@ interface SignInProps {
 
 export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
   const { signIn, errors, fetchStatus } = useSignIn();
+  const { startSSOFlow } = useSSO();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [ssoLoading, setSsoLoading] = useState(false);
+  const [ssoError, setSsoError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,6 +22,24 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
     if (error) return;
     if (signIn.status === 'complete') {
       await signIn.finalize({ navigate: () => undefined });
+    }
+  };
+
+  const onGoogleSignIn = async () => {
+    setSsoError(null);
+    setSsoLoading(true);
+    try {
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: 'oauth_google',
+        redirectUrl: SSO_REDIRECT_URL,
+      });
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+      }
+    } catch (err) {
+      setSsoError(err instanceof Error ? err.message : 'SSO failed');
+    } finally {
+      setSsoLoading(false);
     }
   };
 
@@ -53,6 +77,15 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
       <button type="submit" disabled={fetchStatus === 'fetching'} style={button}>
         {fetchStatus === 'fetching' ? 'Signing in...' : 'Sign in'}
       </button>
+      <div style={divider}>
+        <hr style={dividerLine} />
+        <span style={dividerText}>or</span>
+        <hr style={dividerLine} />
+      </div>
+      <button type="button" onClick={onGoogleSignIn} disabled={ssoLoading} style={oauthButton}>
+        {ssoLoading ? 'Redirecting...' : 'Continue with Google'}
+      </button>
+      {ssoError && <p style={errorStyle}>{ssoError}</p>}
       <button type="button" onClick={onSwitchToSignUp} style={linkButton}>
         Need an account? Sign up
       </button>
@@ -63,6 +96,17 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
 const form: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12 };
 const input: React.CSSProperties = { display: 'block', width: '100%', padding: 8, marginTop: 4 };
 const button: React.CSSProperties = { padding: '10px 16px', fontSize: 16 };
+const oauthButton: React.CSSProperties = {
+  padding: '10px 16px',
+  fontSize: 16,
+  background: '#fff',
+  border: '1px solid #ddd',
+  borderRadius: 4,
+  cursor: 'pointer',
+};
+const divider: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
+const dividerLine: React.CSSProperties = { flex: 1, border: 'none', borderTop: '1px solid #ddd' };
+const dividerText: React.CSSProperties = { color: '#888', fontSize: 13 };
 const linkButton: React.CSSProperties = {
   background: 'none',
   border: 'none',

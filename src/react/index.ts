@@ -23,4 +23,7 @@ export type { ShowProps } from '@clerk/react';
 export { ClerkProvider, getClerkInstance } from './ClerkProvider';
 export type { ClerkProviderProps } from './ClerkProvider';
 
+export { useSSO } from './useSSO';
+export type { StartSSOFlowParams, StartSSOFlowReturnType } from './useSSO';
+
 export type { TokenCache } from '../definitions';

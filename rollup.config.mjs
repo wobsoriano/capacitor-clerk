@@ -2,10 +2,13 @@ import typescript from 'rollup-plugin-typescript2';
 
 const external = [
   '@aparajita/capacitor-secure-storage',
+  '@capacitor/app',
+  '@capacitor/browser',
   '@capacitor/core',
   '@clerk/clerk-js',
   '@clerk/react',
   '@clerk/react/internal',
+  '@clerk/react/legacy',
   '@clerk/shared',
   'react',
   'react-dom',
