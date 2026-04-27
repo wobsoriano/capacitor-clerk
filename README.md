@@ -9,7 +9,7 @@ npm i capacitor-clerk @aparajita/capacitor-secure-storage
 npx cap sync
 ```
 
-`@aparajita/capacitor-secure-storage` is the storage backend used by the default `tokenCache`. It uses Keychain on iOS and EncryptedSharedPreferences on Android. You can swap it for any storage you want; see [Custom token cache](#custom-token-cache) below.
+`@aparajita/capacitor-secure-storage` is the storage backend used by the default `tokenCache`. It uses Keychain on iOS and EncryptedSharedPreferences on Android.
 
 ## Required Capacitor config
 
