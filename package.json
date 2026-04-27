@@ -1,6 +1,6 @@
 {
   "name": "capacitor-clerk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Clerk authentication for Capacitor: headless clerk-js plus React hooks for custom flows",
   "type": "module",
   "module": "dist/esm/index.js",
