@@ -1,25 +1,15 @@
-import type { TokenCache } from '../definitions';
-import { ClerkPlugin } from '../index';
+import { SecureStorage } from '@aparajita/capacitor-secure-storage';
 
-/**
- * Default token cache implementation.
- *
- * On native (iOS/Android, Plans 2 and 3): uses the plugin's secureGet/secureSet/
- * secureRemove which are backed by Keychain / EncryptedSharedPreferences.
- * On web: falls through to the same plugin methods, which use localStorage.
- *
- * Consumers can substitute their own TokenCache (e.g., backed by another
- * secure storage primitive) by passing it to <ClerkProvider tokenCache={...}>.
- */
+import type { TokenCache } from '../definitions';
+
 export const tokenCache: TokenCache = {
   async getToken(key) {
-    const { value } = await ClerkPlugin.secureGet({ key });
-    return value;
+    return SecureStorage.getItem(key);
   },
-  async saveToken(key, token) {
-    await ClerkPlugin.secureSet({ key, value: token });
+  async saveToken(key, value) {
+    await SecureStorage.setItem(key, value);
   },
   async clearToken(key) {
-    await ClerkPlugin.secureRemove({ key });
+    await SecureStorage.removeItem(key);
   },
 };

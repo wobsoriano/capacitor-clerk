@@ -1,20 +1,13 @@
-import { Capacitor } from '@capacitor/core';
 import type { Clerk as ClerkType } from '@clerk/clerk-js';
 
 import type { TokenCache } from '../definitions';
-import {
-  clearClerkSingleton,
-  getClerkSingleton,
-  getClerkSingletonPublishableKey,
-  setClerkSingleton,
-} from '../singleton';
 
 export interface CreateClerkInstanceOptions {
   publishableKey: string;
   tokenCache: TokenCache;
   /**
-   * Optional: a string identifier for this consumer; sent as
-   * `x-capacitor-sdk-version` for telemetry. Defaults to undefined.
+   * Optional consumer SDK identifier; sent as `x-capacitor-sdk-version`. Defaults
+   * to undefined, in which case the header is not set.
    */
   sdkVersion?: string;
 }
@@ -22,63 +15,51 @@ export interface CreateClerkInstanceOptions {
 export const CLERK_CLIENT_JWT_KEY = '__clerk_client_jwt';
 
 /**
- * Higher-order factory that takes the Clerk class and returns a function for
- * creating singleton Clerk instances.
+ * Higher-order factory: takes the Clerk class and returns a function that
+ * builds (and memoizes) a singleton Clerk instance for a given publishable
+ * key. Mirrors the @clerk/expo pattern.
  *
- * On native platforms (iOS, Android), wires `__internal_onBeforeRequest` and
- * `__internal_onAfterResponse` hooks so clerk-js can talk to Clerk's FAPI in
- * "native mode": Bearer-token auth via `?_is_native=1`, no cookies.
- * Verified against `clerk_go/api/fapi/v1/router/cors.go` (CORS allows any
- * origin) and `client_type_middleware.go:22-24` (Capacitor explicitly supported).
+ * Always wires `__internal_onBeforeRequest` and `__internal_onAfterResponse`
+ * to drive Bearer-token auth via `?_is_native=1`..
  */
-export function createClerkInstance(ClerkClass: typeof ClerkType): (options: CreateClerkInstanceOptions) => ClerkType {
+export function createClerkInstance(
+  ClerkClass: typeof ClerkType,
+): (options: CreateClerkInstanceOptions) => ClerkType {
+  let cached: { key: string; instance: ClerkType } | null = null;
+
   return (options: CreateClerkInstanceOptions): ClerkType => {
     const { publishableKey, tokenCache, sdkVersion } = options;
 
-    const existing = getClerkSingleton();
-    const existingKey = getClerkSingletonPublishableKey();
-    if (!existing && !publishableKey) {
+    if (!publishableKey) {
       throw new Error('Missing Clerk publishable key');
     }
 
-    if (existing && existingKey === publishableKey) {
-      return existing;
+    if (cached && cached.key === publishableKey) {
+      return cached.instance;
     }
 
     const clerk = new ClerkClass(publishableKey);
-
-    if (Capacitor.isNativePlatform()) {
-      attachNativeRequestHooks(clerk, tokenCache, sdkVersion);
-    }
-
-    setClerkSingleton(clerk, publishableKey);
+    attachRequestHooks(clerk, tokenCache, sdkVersion);
+    cached = { key: publishableKey, instance: clerk };
     return clerk;
   };
 }
 
-/**
- * Wire `__internal_onBeforeRequest` and `__internal_onAfterResponse` hooks
- * to enable Bearer-token auth and `_is_native=1` mode. Only call on native
- * platforms; on web this would break cookie-based auth.
- */
-function attachNativeRequestHooks(clerk: ClerkType, tokenCache: TokenCache, sdkVersion: string | undefined): void {
-  const onBeforeRequest = (
-    clerk as unknown as {
-      __internal_onBeforeRequest: (
-        cb: (req: { credentials?: RequestCredentials; url?: URL; headers?: Headers }) => Promise<void>,
-      ) => void;
-    }
-  ).__internal_onBeforeRequest;
-  const onAfterResponse = (
-    clerk as unknown as {
-      __internal_onAfterResponse: (cb: (req: unknown, res: Response) => Promise<void>) => void;
-    }
-  ).__internal_onAfterResponse;
+interface ClerkInternalRequestHooks {
+  __internal_onBeforeRequest: (
+    cb: (req: { credentials?: RequestCredentials; url?: URL; headers?: Headers }) => Promise<void>,
+  ) => void;
+  __internal_onAfterResponse: (cb: (req: unknown, res: Response) => Promise<void>) => void;
+}
 
-  onBeforeRequest(async (req) => {
+function attachRequestHooks(clerk: ClerkType, tokenCache: TokenCache, sdkVersion: string | undefined): void {
+  const hooks = clerk as unknown as ClerkInternalRequestHooks;
+
+  hooks.__internal_onBeforeRequest(async (req) => {
     req.credentials = 'omit';
     req.url?.searchParams.append('_is_native', '1');
-    const jwt = await tokenCache.getToken(CLERK_CLIENT_JWT_KEY);
+
+    const jwt = (await tokenCache.getToken(CLERK_CLIENT_JWT_KEY)) ?? null;
     if (jwt) {
       (req.headers as Headers).set('authorization', jwt);
     }
@@ -88,18 +69,10 @@ function attachNativeRequestHooks(clerk: ClerkType, tokenCache: TokenCache, sdkV
     }
   });
 
-  onAfterResponse(async (_req, res) => {
+  hooks.__internal_onAfterResponse(async (_req, res) => {
     const auth = res.headers.get('authorization');
     if (auth) {
       await tokenCache.saveToken(CLERK_CLIENT_JWT_KEY, auth);
     }
   });
-}
-
-/**
- * Test-only: reset the singleton between tests. Not exported from the
- * package's public surface.
- */
-export function __resetForTests(): void {
-  clearClerkSingleton();
 }

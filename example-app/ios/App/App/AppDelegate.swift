@@ -1,6 +1,5 @@
 import UIKit
 import Capacitor
-import CapacitorClerk
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -8,7 +7,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        clerkViewFactory = ClerkViewFactory()
         // Override point for customization after application launch.
         return true
     }
