@@ -19,7 +19,26 @@ export interface ClerkProviderProps {
   children: ReactNode;
 }
 
-const buildClerkInstance = createClerkInstance(Clerk);
+/**
+ * Access or create a Clerk instance outside of a React component.
+ * @example
+ * import { getClerkInstance } from "capacitor-clerk"
+ *
+ * const clerkInstance = getClerkInstance({ publishableKey: 'xxxx' })
+ *
+ * // Always pass the `publishableKey` to `ClerkProvider`
+ * <ClerkProvider publishableKey={'xxxx'}>
+ *     ...
+ * </ClerkProvider>
+ *
+ * // Somewhere in your code, outside of React you can do
+ * const token = await clerkInstance.session?.getToken();
+ * fetch('http://example.com/', {headers: {Authorization: token })
+ *
+ * @throws MissingPublishableKeyError publishableKey is missing and Clerk has not been initialized yet
+ * @returns HeadlessBrowserClerk | BrowserClerk
+ */
+export const getClerkInstance = createClerkInstance(Clerk);
 
 // `InternalClerkProvider`'s public typing doesn't accept a pre-built `clerk`
 // via `Clerk=` cleanly; cast to a permissive component type. This is the
@@ -34,7 +53,7 @@ export function ClerkProvider({
   children,
 }: ClerkProviderProps): JSX.Element {
   const clerk = useMemo(
-    () => buildClerkInstance({ publishableKey, tokenCache }),
+    () => getClerkInstance({ publishableKey, tokenCache }),
     [publishableKey, tokenCache],
   );
 

@@ -20,7 +20,7 @@ export {
 } from '@clerk/react';
 export type { ShowProps } from '@clerk/react';
 
-export { ClerkProvider } from './ClerkProvider';
+export { ClerkProvider, getClerkInstance } from './ClerkProvider';
 export type { ClerkProviderProps } from './ClerkProvider';
 
 export type { TokenCache } from '../definitions';
