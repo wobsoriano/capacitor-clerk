@@ -118,7 +118,7 @@ export function AuthScreen() {
 
 ### `<UserButton>` (iOS only)
 
-`<UserButton>` renders a circular avatar button in the WebView. Tapping it presents the native clerk-ios `UserProfileView` as a full-screen modal. When the user dismisses the profile sheet, the JS Clerk session is automatically refreshed to reflect any changes.
+`<UserButton>` renders a circular avatar button in the WebView. Tapping it presents the native clerk-ios `UserProfileView` as a full-screen modal via `useUserProfileModal`. When the user dismisses the profile sheet, the JS Clerk session is automatically refreshed to reflect any changes.
 
 ```tsx
 import { UserButton } from 'capacitor-clerk/native';
@@ -133,7 +133,9 @@ The button renders the user's profile photo (`user.imageUrl`) or an initial lett
 
 ### `<UserProfileView>` (iOS only)
 
-`<UserProfileView>` renders the native clerk-ios `UserProfileView` inline in the WebView, not as a modal, but embedded directly in your layout. Place it in a page or panel and it fills the available space. Unmounting the component removes the native view.
+`<UserProfileView>` embeds the native clerk-ios `UserProfileView` directly in your layout (not as a modal). The native view tracks the div's position and size, so you control placement entirely with CSS. Unmounting the component removes the native view.
+
+**Fullscreen** (dedicated profile screen, no dismiss button):
 
 ```tsx
 import { UserProfileView } from 'capacitor-clerk/native';
@@ -146,22 +148,28 @@ export function ProfilePage() {
     if (!isSignedIn) navigate('/sign-in');
   }, [isSignedIn]);
 
-  return <UserProfileView style={{ width: '100%', height: '100%' }} />;
+  return <UserProfileView style={{ position: 'fixed', inset: 0 }} />;
 }
 ```
 
-Props:
-- `style?: React.CSSProperties` -- controls the placeholder div size; the native view matches it
-- `isDismissable?: boolean` -- shows a native "Done" button inside the profile view (default `false`)
-- `onProfileEvent?: (event: { type: string; data: string }) => void` -- called on native events; `type` is `"signedOut"` when the user deletes their account or signs out from within the profile view
+**Inline** (embedded in a page, with a dismiss button):
 
-Sign-out is detected automatically: when `type === "signedOut"` fires, the JS Clerk session is synced. Use `useAuth()` in a `useEffect` to react.
+```tsx
+<UserProfileView isDismissable style={{ width: '100%', height: 600 }} />
+```
+
+Props:
+- `style?: React.CSSProperties`: controls the placeholder div size and position; the native view matches it
+- `isDismissable?: boolean`: when `true`, shows a native "Done" button — use this when the view is in a sheet or panel the user can close. When `false` (default), no button is shown, suitable for fullscreen usage where navigation replaces dismissal
+- `onProfileEvent?: (event: { type: string; data: string }) => void`: called on native events; `type` is `"signedOut"` when the user signs out or deletes their account from within the view
+
+Sign-out is detected automatically: when `type === "signedOut"` fires, the JS Clerk session is synced. Use `useAuth()` in a `useEffect` to react to the state change.
 
 **Requirements:** Same as `<AuthView>`: iOS 17+, `capacitor-clerk` added as a local SPM package in Xcode.
 
 ### `useUserProfileModal()` (iOS only)
 
-`useUserProfileModal` is an imperative hook for presenting the native `UserProfileView` as a full-screen modal from any custom trigger.
+`useUserProfileModal` is the hook powering `<UserButton>`. Use it directly when you want to trigger the native `UserProfileView` modal from a custom UI element.
 
 ```tsx
 import { useUserProfileModal } from 'capacitor-clerk/native';
@@ -197,7 +205,7 @@ For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custo
 
 ## Limitations
 
-- **Clerk's prebuilt web UI components not supported.** The web versions of `<SignIn>`, `<SignUp>`, `<UserProfile>`, `<OrganizationSwitcher>`, etc. don't work because `clerk-js` runs in `runtimeEnvironment: 'headless'`. Use the hooks to build custom flows, or use `<AuthView>` and `<UserButton>` from `capacitor-clerk/native` for the native iOS UI.
+- **Clerk's prebuilt web UI components not supported.** The web versions of `<SignIn>`, `<SignUp>`, `<UserProfile>`, `<OrganizationSwitcher>`, etc. don't work because `clerk-js` runs in `runtimeEnvironment: 'headless'`. Use the hooks to build custom flows, or use the native components from `capacitor-clerk/native` for the iOS UI.
 - **`<AuthView>` is iOS only.** Android native auth (`clerk-android`) is not yet supported.
 - **Capacitor v6+ only.** Older Capacitor versions don't expose `CapacitorHttp` and won't intercept fetch the way this package needs.
 
