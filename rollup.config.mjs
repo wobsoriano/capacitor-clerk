@@ -2,6 +2,7 @@ import typescript from 'rollup-plugin-typescript2';
 
 const external = [
   '@aparajita/capacitor-secure-storage',
+  '@capacitor-community/apple-sign-in',
   '@capacitor/app',
   '@capacitor/browser',
   '@capacitor/core',
