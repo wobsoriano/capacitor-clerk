@@ -102,7 +102,7 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
         {ssoLoading ? 'Redirecting...' : 'Continue with Google'}
       </button>
       <button type="button" onClick={onAppleSignIn} disabled={ssoLoading || appleLoading} style={appleButton}>
-        {appleLoading ? 'Signing in...' : ' Sign in with Apple'}
+        {appleLoading ? 'Signing in...' : 'Sign in with Apple'}
       </button>
       {ssoError && <p style={errorStyle}>{ssoError}</p>}
       <button type="button" onClick={onSwitchToSignUp} style={linkButton}>
