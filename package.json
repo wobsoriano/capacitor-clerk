@@ -33,6 +33,11 @@
     "ios/",
     "Package.swift"
   ],
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  },
   "author": "Robert Soriano",
   "license": "MIT",
   "repository": {
