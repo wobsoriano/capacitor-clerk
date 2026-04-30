@@ -1,12 +1,7 @@
-import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import type { PluginListenerHandle } from '@capacitor/core';
-import { useClerk, useUser } from '@clerk/react';
+import { useUser } from '@clerk/react';
 
-import { CLERK_CLIENT_JWT_KEY } from '../react/createClerkInstance';
-import { tokenCache } from '../token-cache';
-import { ClerkNativePlugin } from './ClerkNativePlugin';
-import { syncNativeSession } from './syncNativeSession';
+import { useUserProfileModal } from './useUserProfileModal';
 
 export interface UserButtonProps {
   style?: React.CSSProperties;
@@ -14,24 +9,7 @@ export interface UserButtonProps {
 
 export function UserButton({ style }: UserButtonProps) {
   const { user, isLoaded } = useUser();
-  const clerk = useClerk();
-
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    let handle: PluginListenerHandle | null = null;
-
-    ClerkNativePlugin.addListener('profileDismissed', async () => {
-      await syncNativeSession();
-    }).then((h) => {
-      handle = h;
-    });
-
-    return () => {
-      handle?.remove();
-      void ClerkNativePlugin.dismissUserProfile();
-    };
-  }, []);
+  const { presentUserProfile } = useUserProfileModal();
 
   if (!Capacitor.isNativePlatform() || !isLoaded || !user) return null;
 
@@ -41,22 +19,9 @@ export function UserButton({ style }: UserButtonProps) {
     '?'
   ).toUpperCase();
 
-  const handleClick = async () => {
-    try {
-      const bearerToken = (await tokenCache.getToken(CLERK_CLIENT_JWT_KEY)) ?? null;
-      await ClerkNativePlugin.configure({
-        publishableKey: clerk.publishableKey!,
-        bearerToken,
-      });
-      await ClerkNativePlugin.presentUserProfile();
-    } catch (e) {
-      console.error('[UserButton] presentUserProfile error:', e);
-    }
-  };
-
   return (
     <button
-      onClick={handleClick}
+      onClick={() => void presentUserProfile()}
       style={{
         display: 'flex',
         alignItems: 'center',

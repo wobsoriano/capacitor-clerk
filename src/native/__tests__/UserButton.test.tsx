@@ -7,35 +7,10 @@ vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: vi.fn().mockReturnValue(true) },
 }));
 
-const mockRemove = vi.fn();
-const mockConfigure = vi.fn().mockResolvedValue(undefined);
 const mockPresentUserProfile = vi.fn().mockResolvedValue(undefined);
-const mockDismissUserProfile = vi.fn().mockResolvedValue(undefined);
-const mockAddListener = vi.fn().mockResolvedValue({ remove: mockRemove });
 
-vi.mock('../ClerkNativePlugin', () => ({
-  ClerkNativePlugin: {
-    configure: (...args: unknown[]) => mockConfigure(...args),
-    presentUserProfile: (...args: unknown[]) => mockPresentUserProfile(...args),
-    dismissUserProfile: (...args: unknown[]) => mockDismissUserProfile(...args),
-    addListener: (...args: unknown[]) => mockAddListener(...args),
-  },
-}));
-
-const mockSyncNativeSession = vi.fn().mockResolvedValue(true);
-
-vi.mock('../syncNativeSession', () => ({
-  syncNativeSession: (...args: unknown[]) => mockSyncNativeSession(...args),
-}));
-
-const mockGetTokenFromCache = vi.fn().mockResolvedValue('cached-client-jwt');
-
-vi.mock('../../token-cache', () => ({
-  tokenCache: { getToken: (...args: unknown[]) => mockGetTokenFromCache(...args) },
-}));
-
-vi.mock('../../react/createClerkInstance', () => ({
-  CLERK_CLIENT_JWT_KEY: '__clerk_client_jwt',
+vi.mock('../useUserProfileModal', () => ({
+  useUserProfileModal: () => ({ presentUserProfile: mockPresentUserProfile }),
 }));
 
 const mockUser = vi.hoisted(() => ({
@@ -47,7 +22,6 @@ const mockUser = vi.hoisted(() => ({
 
 vi.mock('@clerk/react', () => ({
   useUser: vi.fn().mockReturnValue({ user: mockUser, isLoaded: true }),
-  useClerk: vi.fn().mockReturnValue({ publishableKey: 'pk_test_xxx' }),
 }));
 
 // eslint-disable-next-line import/first -- vi.mock calls are hoisted
@@ -102,41 +76,10 @@ describe('<UserButton>', () => {
     expect(screen.getByText('A')).toBeDefined();
   });
 
-  it('calls configure then presentUserProfile on click', async () => {
+  it('calls presentUserProfile on click', async () => {
     render(<UserButton />);
     fireEvent.click(screen.getByRole('button'));
     await vi.waitFor(() => expect(mockPresentUserProfile).toHaveBeenCalled());
-    expect(mockConfigure).toHaveBeenCalledWith({
-      publishableKey: 'pk_test_xxx',
-      bearerToken: 'cached-client-jwt',
-    });
-  });
-
-  it('registers a profileDismissed listener on mount', async () => {
-    render(<UserButton />);
-    await vi.waitFor(() => expect(mockAddListener).toHaveBeenCalled());
-    expect(mockAddListener).toHaveBeenCalledWith('profileDismissed', expect.any(Function));
-  });
-
-  it('calls syncNativeSession when profileDismissed fires', async () => {
-    let dismissedHandler: (() => Promise<void>) | undefined;
-    mockAddListener.mockImplementationOnce((_event: string, handler: () => Promise<void>) => {
-      dismissedHandler = handler;
-      return Promise.resolve({ remove: mockRemove });
-    });
-
-    render(<UserButton />);
-    await vi.waitFor(() => expect(dismissedHandler).toBeDefined());
-    await dismissedHandler!();
-    expect(mockSyncNativeSession).toHaveBeenCalled();
-  });
-
-  it('removes listener and calls dismissUserProfile on unmount', async () => {
-    const { unmount } = render(<UserButton />);
-    await vi.waitFor(() => expect(mockAddListener).toHaveBeenCalled());
-    unmount();
-    expect(mockRemove).toHaveBeenCalled();
-    expect(mockDismissUserProfile).toHaveBeenCalled();
   });
 
   it('applies consumer style to the button', () => {
