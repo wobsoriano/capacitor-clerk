@@ -3,8 +3,8 @@ import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useClerk, useUser } from '@clerk/react';
 
-import { getCachedClerkInstance } from '../react/createClerkInstance';
 import { ClerkNativePlugin } from './ClerkNativePlugin';
+import { syncNativeSession } from './syncNativeSession';
 
 export interface UserButtonProps {
   style?: React.CSSProperties;
@@ -20,16 +20,14 @@ export function UserButton({ style }: UserButtonProps) {
     let handle: PluginListenerHandle | null = null;
 
     ClerkNativePlugin.addListener('profileDismissed', async () => {
-      const instance = getCachedClerkInstance() as unknown as Record<string, unknown>;
-      if (instance && typeof instance.__internal_reloadInitialResources === 'function') {
-        await (instance.__internal_reloadInitialResources as () => Promise<void>)();
-      }
+      await syncNativeSession();
     }).then((h) => {
       handle = h;
     });
 
     return () => {
       handle?.remove();
+      void ClerkNativePlugin.dismissUserProfile();
     };
   }, []);
 

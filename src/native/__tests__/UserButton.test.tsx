@@ -10,23 +10,22 @@ vi.mock('@capacitor/core', () => ({
 const mockRemove = vi.fn();
 const mockConfigure = vi.fn().mockResolvedValue(undefined);
 const mockPresentUserProfile = vi.fn().mockResolvedValue(undefined);
+const mockDismissUserProfile = vi.fn().mockResolvedValue(undefined);
 const mockAddListener = vi.fn().mockResolvedValue({ remove: mockRemove });
 
 vi.mock('../ClerkNativePlugin', () => ({
   ClerkNativePlugin: {
     configure: (...args: unknown[]) => mockConfigure(...args),
     presentUserProfile: (...args: unknown[]) => mockPresentUserProfile(...args),
+    dismissUserProfile: (...args: unknown[]) => mockDismissUserProfile(...args),
     addListener: (...args: unknown[]) => mockAddListener(...args),
   },
 }));
 
-const mockReloadInitialResources = vi.fn().mockResolvedValue(undefined);
-const mockGetCachedClerkInstance = vi.fn().mockReturnValue({
-  __internal_reloadInitialResources: (...args: unknown[]) => mockReloadInitialResources(...args),
-});
+const mockSyncNativeSession = vi.fn().mockResolvedValue(true);
 
-vi.mock('../../react/createClerkInstance', () => ({
-  getCachedClerkInstance: (...args: unknown[]) => mockGetCachedClerkInstance(...args),
+vi.mock('../syncNativeSession', () => ({
+  syncNativeSession: (...args: unknown[]) => mockSyncNativeSession(...args),
 }));
 
 const mockGetToken = vi.fn().mockResolvedValue('test-bearer-token');
@@ -113,7 +112,7 @@ describe('<UserButton>', () => {
     expect(mockAddListener).toHaveBeenCalledWith('profileDismissed', expect.any(Function));
   });
 
-  it('calls __internal_reloadInitialResources when profileDismissed fires', async () => {
+  it('calls syncNativeSession when profileDismissed fires', async () => {
     let dismissedHandler: (() => Promise<void>) | undefined;
     mockAddListener.mockImplementationOnce((_event: string, handler: () => Promise<void>) => {
       dismissedHandler = handler;
@@ -123,14 +122,15 @@ describe('<UserButton>', () => {
     render(<UserButton />);
     await vi.waitFor(() => expect(dismissedHandler).toBeDefined());
     await dismissedHandler!();
-    expect(mockReloadInitialResources).toHaveBeenCalled();
+    expect(mockSyncNativeSession).toHaveBeenCalled();
   });
 
-  it('removes the profileDismissed listener on unmount', async () => {
+  it('removes listener and calls dismissUserProfile on unmount', async () => {
     const { unmount } = render(<UserButton />);
     await vi.waitFor(() => expect(mockAddListener).toHaveBeenCalled());
     unmount();
     expect(mockRemove).toHaveBeenCalled();
+    expect(mockDismissUserProfile).toHaveBeenCalled();
   });
 
   it('applies consumer style to the button', () => {
