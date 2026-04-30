@@ -22,10 +22,16 @@
       "types": "./dist/esm/token-cache/index.d.ts",
       "import": "./dist/esm/token-cache/index.js"
     },
+    "./native": {
+      "types": "./dist/esm/native/index.d.ts",
+      "import": "./dist/esm/native/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "ios/",
+    "Package.swift"
   ],
   "author": "Robert Soriano",
   "license": "MIT",

@@ -46,4 +46,5 @@ export default [
   entry('src/react/index.ts', 'dist/esm/react/index.js'),
   entry('src/apple/index.ts', 'dist/esm/apple/index.js'),
   entry('src/token-cache/index.ts', 'dist/esm/token-cache/index.js'),
+  entry('src/native/index.ts', 'dist/esm/native/index.js'),
 ];
