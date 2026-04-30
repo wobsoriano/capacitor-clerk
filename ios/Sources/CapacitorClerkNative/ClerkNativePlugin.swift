@@ -126,5 +126,6 @@ private struct ClerkAuthSheetView: View {
 
     var body: some View {
         AuthView(mode: mode)
+            .environment(Clerk.shared)
     }
 }
