@@ -78,6 +78,43 @@ export function SignIn() {
 
 Full email + password sign-in and sign-up (with email verification) flows are in [`example-app/src/SignIn.tsx`](./example-app/src/SignIn.tsx) and [`example-app/src/SignUp.tsx`](./example-app/src/SignUp.tsx).
 
+### OAuth / SSO (Google, GitHub, etc.)
+
+Use `useSSO` from `capacitor-clerk` for browser-based OAuth flows. It opens the provider in an in-app browser tab via `@capacitor/browser` and handles the deep-link callback:
+
+```tsx
+import { useSSO } from 'capacitor-clerk';
+
+const { startSSOFlow } = useSSO();
+
+const { createdSessionId, setActive } = await startSSOFlow({
+  strategy: 'oauth_google',
+  redirectUrl: 'myapp://sso-callback',  // your app's deep-link scheme
+});
+if (createdSessionId && setActive) {
+  await setActive({ session: createdSessionId });
+}
+```
+
+Requires `@capacitor/browser` and `@capacitor/app`. Register your redirect URL scheme in `Info.plist` (iOS) and `AndroidManifest.xml` (Android).
+
+### Sign in with Apple (iOS native)
+
+Use `useSignInWithApple` from `capacitor-clerk/apple` for native iOS Sign in with Apple. This uses Apple's native sheet instead of a browser redirect:
+
+```tsx
+import { useSignInWithApple } from 'capacitor-clerk/apple';
+
+const { startAppleAuthenticationFlow } = useSignInWithApple();
+
+const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
+if (createdSessionId && setActive) {
+  await setActive({ session: createdSessionId });
+}
+```
+
+Requires `@capawesome/capacitor-apple-sign-in` and the **Sign in with Apple** capability enabled in your Xcode project (Signing & Capabilities tab). iOS only — use `useSSO({ strategy: 'oauth_apple' })` on Android.
+
 For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custom-flows guides](https://clerk.com/docs/guides/development/custom-flows).
 
 ## Limitations
@@ -88,7 +125,7 @@ For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custo
 ## Roadmap
 
 - Native UI bridges via `clerk-ios` / `clerk-android` (currently dropped in favor of headless + custom flows; tracked in GitHub issues).
-- OAuth-via-browser-tab flows (Google, Apple, etc.) using `@capacitor/browser`.
+- Android testing for Sign in with Apple via `useSSO({ strategy: 'oauth_apple' })`.
 
 ## License
 
