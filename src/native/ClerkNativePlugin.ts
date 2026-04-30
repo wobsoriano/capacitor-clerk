@@ -6,9 +6,15 @@ export interface ClerkNativePlugin {
   presentAuth(options: { mode?: 'signIn' | 'signUp' | 'signInOrUp' }): Promise<void>;
   dismissAuth(): Promise<void>;
   getClientToken(): Promise<{ token: string | null }>;
+  presentUserProfile(): Promise<void>;
+  dismissUserProfile(): Promise<void>;
   addListener(
     event: 'authCompleted',
     handler: (data: { sessionId: string }) => void,
+  ): Promise<PluginListenerHandle>;
+  addListener(
+    event: 'profileDismissed',
+    handler: () => void,
   ): Promise<PluginListenerHandle>;
   removeAllListeners(): Promise<void>;
 }
