@@ -31,6 +31,7 @@ vi.mock('@clerk/react', () => ({
   useClerk: vi.fn().mockReturnValue({
     publishableKey: 'pk_test_xxx',
     session: { getToken: () => mockGetToken() },
+    setActive: vi.fn(),
   }),
 }));
 

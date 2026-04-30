@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useClerk } from '@clerk/react';
+
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 import { syncNativeSession } from './syncNativeSession';
 
@@ -27,8 +28,8 @@ export function AuthView({ mode = 'signInOrUp' }: AuthViewProps) {
           bearerToken,
         });
 
-        listenerHandle = await ClerkNativePlugin.addListener('authCompleted', async () => {
-          await syncNativeSession();
+        listenerHandle = await ClerkNativePlugin.addListener('authCompleted', async ({ sessionId }) => {
+          await syncNativeSession(sessionId, clerk);
         });
 
         await ClerkNativePlugin.presentAuth({ mode });
