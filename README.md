@@ -98,6 +98,24 @@ if (createdSessionId && setActive) {
 
 Requires `@capacitor/browser` and `@capacitor/app`. Register your redirect URL scheme in `Info.plist` (iOS) and `AndroidManifest.xml` (Android).
 
+### Native auth UI — `<AuthView>` (iOS only)
+
+`<AuthView>` presents Clerk's native iOS auth UI (via [clerk-ios](https://github.com/clerk/clerk-ios)) as a full-screen modal. It handles the full flow: configure, present, dismiss, and sync the resulting session back to the JS SDK. It also restores an existing clerk-ios session transparently on app reload, so the user stays signed in across WebView refreshes.
+
+**Requirements:** iOS 17+. After `npm install capacitor-clerk`, open Xcode and add the package via **File > Add Package Dependencies**, pointing to your `node_modules/capacitor-clerk` directory.
+
+```tsx
+import { AuthView } from 'capacitor-clerk/native';
+
+// Render when the user is not signed in. The sheet appears automatically,
+// and once auth completes the session is synced and the component unmounts.
+export function AuthScreen() {
+  return <AuthView mode="signInOrUp" />;
+}
+```
+
+`mode` accepts `"signIn"`, `"signUp"`, or `"signInOrUp"` (default). On non-iOS platforms the component renders nothing.
+
 ### Sign in with Apple (iOS native)
 
 Use `useSignInWithApple` from `capacitor-clerk/apple` for native iOS Sign in with Apple. This uses Apple's native sheet instead of a browser redirect:
@@ -119,12 +137,13 @@ For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custo
 
 ## Limitations
 
-- **No Clerk UI components.** `<UserButton>`, `<SignIn>`, `<SignUp>`, `<UserProfile>`, `<OrganizationSwitcher>`, etc. don't work because `clerk-js` runs in `runtimeEnvironment: 'headless'`. Use the hooks.
+- **Web Clerk UI components not supported.** `<UserButton>`, `<SignIn>`, `<SignUp>`, `<UserProfile>`, `<OrganizationSwitcher>`, etc. don't work because `clerk-js` runs in `runtimeEnvironment: 'headless'`. Use the hooks to build custom flows, or use `<AuthView>` for the native iOS UI.
+- **`<AuthView>` is iOS only.** Android native auth (`clerk-android`) is not yet supported.
 - **Capacitor v6+ only.** Older Capacitor versions don't expose `CapacitorHttp` and won't intercept fetch the way this package needs.
 
 ## Roadmap
 
-- Native UI bridges via `clerk-ios` / `clerk-android` (currently dropped in favor of headless + custom flows; tracked in GitHub issues).
+- `<AuthView>` for Android via `clerk-android`.
 - Android testing for Sign in with Apple via `useSSO({ strategy: 'oauth_apple' })`.
 
 ## License
