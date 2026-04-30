@@ -114,8 +114,8 @@ describe('<UserButton>', () => {
   });
 
   it('calls __internal_reloadInitialResources when profileDismissed fires', async () => {
-    let dismissedHandler: (() => void) | undefined;
-    mockAddListener.mockImplementationOnce((_event: string, handler: () => void) => {
+    let dismissedHandler: (() => Promise<void>) | undefined;
+    mockAddListener.mockImplementationOnce((_event: string, handler: () => Promise<void>) => {
       dismissedHandler = handler;
       return Promise.resolve({ remove: mockRemove });
     });
