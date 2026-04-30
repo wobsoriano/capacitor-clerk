@@ -3,6 +3,8 @@ import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useClerk } from '@clerk/react';
 
+import { CLERK_CLIENT_JWT_KEY } from '../react/createClerkInstance';
+import { tokenCache } from '../token-cache';
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 import { syncNativeSession } from './syncNativeSession';
 
@@ -22,6 +24,14 @@ export function AuthView({ mode = 'signInOrUp' }: AuthViewProps) {
 
     const setup = async () => {
       try {
+        // Restore a clerk-ios session that survived a JS reload before showing auth.
+        if (!clerk.session) {
+          const restored = await syncNativeSession();
+          if (restored) return;
+          // Native session expired; clear any stale JS token.
+          await tokenCache.clearToken?.(CLERK_CLIENT_JWT_KEY);
+        }
+
         const bearerToken = (await clerk.session?.getToken()) ?? null;
         await ClerkNativePlugin.configure({
           publishableKey: clerk.publishableKey!,
@@ -32,7 +42,7 @@ export function AuthView({ mode = 'signInOrUp' }: AuthViewProps) {
           listenerHandle?.remove();
           listenerHandle = null;
           await ClerkNativePlugin.dismissAuth();
-          await syncNativeSession(sessionId, clerk);
+          await syncNativeSession(sessionId);
         });
 
         await ClerkNativePlugin.presentAuth({ mode });

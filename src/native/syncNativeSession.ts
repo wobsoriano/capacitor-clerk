@@ -1,18 +1,28 @@
-import type { useClerk } from '@clerk/react';
 import { CLERK_CLIENT_JWT_KEY, getCachedClerkInstance } from '../react/createClerkInstance';
 import { tokenCache } from '../token-cache';
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 
-export async function syncNativeSession(sessionId: string, clerk: ReturnType<typeof useClerk>): Promise<void> {
+export async function syncNativeSession(sessionId?: string): Promise<boolean> {
   const { token } = await ClerkNativePlugin.getClientToken();
   if (token) {
     await tokenCache?.saveToken(CLERK_CLIENT_JWT_KEY, token);
+  } else if (!sessionId) {
+    return false;
   }
 
-  const rawClerk = getCachedClerkInstance() as unknown as Record<string, unknown>;
-  if (rawClerk && typeof rawClerk.__internal_reloadInitialResources === 'function') {
-    await (rawClerk.__internal_reloadInitialResources as () => Promise<void>)();
+  const clerk = getCachedClerkInstance() as unknown as Record<string, unknown>;
+  if (!clerk) return false;
+
+  if (typeof clerk.__internal_reloadInitialResources === 'function') {
+    await (clerk.__internal_reloadInitialResources as () => Promise<void>)();
   }
 
-  await clerk.setActive({ session: sessionId });
+  const sid = sessionId ?? ((clerk as any).session?.id as string | undefined);
+  if (!sid) return false;
+
+  if (typeof clerk.setActive === 'function') {
+    await (clerk.setActive as (opts: { session: string }) => Promise<void>)({ session: sid });
+  }
+
+  return true;
 }
