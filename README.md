@@ -131,6 +131,51 @@ The button renders the user's profile photo (`user.imageUrl`) or an initial lett
 
 **Requirements:** Same as `<AuthView>`: iOS 17+, `capacitor-clerk` added as a local SPM package in Xcode.
 
+### `<UserProfileView>` (iOS only)
+
+`<UserProfileView>` renders the native clerk-ios `UserProfileView` inline in the WebView, not as a modal, but embedded directly in your layout. Place it in a page or panel and it fills the available space. Unmounting the component removes the native view.
+
+```tsx
+import { UserProfileView } from 'capacitor-clerk/native';
+import { useAuth } from 'capacitor-clerk';
+
+export function ProfilePage() {
+  const { isSignedIn } = useAuth();
+
+  useEffect(() => {
+    if (!isSignedIn) navigate('/sign-in');
+  }, [isSignedIn]);
+
+  return <UserProfileView style={{ width: '100%', height: '100%' }} />;
+}
+```
+
+Props:
+- `style?: React.CSSProperties` -- controls the placeholder div size; the native view matches it
+- `isDismissable?: boolean` -- shows a native "Done" button inside the profile view (default `false`)
+- `onProfileEvent?: (event: { type: string; data: string }) => void` -- called on native events; `type` is `"signedOut"` when the user deletes their account or signs out from within the profile view
+
+Sign-out is detected automatically: when `type === "signedOut"` fires, the JS Clerk session is synced. Use `useAuth()` in a `useEffect` to react.
+
+**Requirements:** Same as `<AuthView>`: iOS 17+, `capacitor-clerk` added as a local SPM package in Xcode.
+
+### `useUserProfileModal()` (iOS only)
+
+`useUserProfileModal` is an imperative hook for presenting the native `UserProfileView` as a full-screen modal from any custom trigger.
+
+```tsx
+import { useUserProfileModal } from 'capacitor-clerk/native';
+
+function SettingsButton() {
+  const { presentUserProfile } = useUserProfileModal();
+  return <button onClick={() => void presentUserProfile()}>Manage profile</button>;
+}
+```
+
+The returned promise resolves when the modal is dismissed. Sign-out from within the modal is detected and synced automatically.
+
+**Requirements:** Same as `<AuthView>`.
+
 ### Sign in with Apple (iOS native)
 
 Use `useSignInWithApple` from `capacitor-clerk/apple` for native iOS Sign in with Apple. This uses Apple's native sheet instead of a browser redirect:
