@@ -141,24 +141,27 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
         let isDismissable = call.getBool("isDismissable") ?? false
 
         DispatchQueue.main.async {
+            self.inlineProfileHostingController?.willMove(toParent: nil)
             self.inlineProfileHostingController?.view.removeFromSuperview()
             self.inlineProfileHostingController?.removeFromParent()
             self.inlineProfileHostingController = nil
 
-            guard let webView = self.bridge?.webView else {
-                call.reject("WebView not available")
+            guard let parentVC = self.bridge?.viewController else {
+                call.reject("View controller not available")
                 return
             }
 
             let hc = UIHostingController(rootView: AnyView(
                 InlineUserProfileView(isDismissable: isDismissable) { [weak self] type in
-                    self?.notifyListeners("profileEvent", data: ["type": type, "data": "{}"])
+                    self?.notifyListeners("profileEvent", data: ["type": type, "data": [:] as [String: Any]])
                 }
             ))
             hc.view.frame = CGRect(x: x, y: y, width: width, height: height)
             hc.view.autoresizingMask = []
             hc.view.backgroundColor = .systemBackground
-            webView.addSubview(hc.view)
+            parentVC.addChild(hc)
+            parentVC.view.addSubview(hc.view)
+            hc.didMove(toParent: parentVC)
             self.inlineProfileHostingController = hc
             call.resolve()
         }
@@ -186,6 +189,7 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func destroyUserProfile(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
+            self.inlineProfileHostingController?.willMove(toParent: nil)
             self.inlineProfileHostingController?.view.removeFromSuperview()
             self.inlineProfileHostingController?.removeFromParent()
             self.inlineProfileHostingController = nil
