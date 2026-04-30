@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useClerk, useUser } from '@clerk/react';
@@ -13,7 +13,6 @@ export interface UserButtonProps {
 export function UserButton({ style }: UserButtonProps) {
   const { user, isLoaded } = useUser();
   const clerk = useClerk();
-  const listenerRef = useRef<PluginListenerHandle | null>(null);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
@@ -27,7 +26,6 @@ export function UserButton({ style }: UserButtonProps) {
       }
     }).then((h) => {
       handle = h;
-      listenerRef.current = h;
     });
 
     return () => {

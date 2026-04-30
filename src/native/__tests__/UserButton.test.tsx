@@ -89,11 +89,11 @@ describe('<UserButton>', () => {
 
   it('falls back to email initial when firstName is absent', () => {
     vi.mocked(useUser).mockReturnValueOnce({
-      user: { ...mockUser, imageUrl: '', firstName: null },
+      user: { ...mockUser, imageUrl: '', firstName: null, emailAddresses: [{ emailAddress: 'alice@example.com' }] },
       isLoaded: true,
     } as any);
     render(<UserButton />);
-    expect(screen.getByText('T')).toBeDefined(); // 't' from test@example.com, uppercased
+    expect(screen.getByText('A')).toBeDefined();
   });
 
   it('calls configure then presentUserProfile on click', async () => {
