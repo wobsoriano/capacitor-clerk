@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useClerk } from '@clerk/react';
 import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
+import { useClerk } from '@clerk/react';
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 import { syncNativeSession } from './syncNativeSession';
 
@@ -20,18 +20,21 @@ export function AuthView({ mode = 'signInOrUp' }: AuthViewProps) {
     let listenerHandle: PluginListenerHandle | null = null;
 
     const setup = async () => {
-      const bearerToken = (await clerk.session?.getToken()) ?? null;
+      try {
+        const bearerToken = (await clerk.session?.getToken()) ?? null;
+        await ClerkNativePlugin.configure({
+          publishableKey: clerk.publishableKey!,
+          bearerToken,
+        });
 
-      await ClerkNativePlugin.configure({
-        publishableKey: clerk.publishableKey!,
-        bearerToken,
-      });
+        listenerHandle = await ClerkNativePlugin.addListener('authCompleted', async () => {
+          await syncNativeSession();
+        });
 
-      listenerHandle = await ClerkNativePlugin.addListener('authCompleted', async ({ sessionId }) => {
-        await syncNativeSession(sessionId, clerk);
-      });
-
-      await ClerkNativePlugin.presentAuth({ mode });
+        await ClerkNativePlugin.presentAuth({ mode });
+      } catch (e) {
+        console.error('[AuthView] setup error:', e);
+      }
     };
 
     setup();
