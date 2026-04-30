@@ -1,11 +1,12 @@
 import { ClerkProvider, Show } from 'capacitor-clerk';
+import { AuthView } from 'capacitor-clerk/native';
 import { useState } from 'react';
 
 import { Home } from './Home';
 import { SignIn } from './SignIn';
 import { SignUp } from './SignUp';
 
-type Route = 'sign-in' | 'sign-up';
+type Route = 'sign-in' | 'sign-up' | 'native-auth';
 
 export function App({ publishableKey }: { publishableKey: string }): JSX.Element {
   const [route, setRoute] = useState<Route>('sign-in');
@@ -15,11 +16,17 @@ export function App({ publishableKey }: { publishableKey: string }): JSX.Element
       <main style={layout}>
         <h1>capacitor-clerk demo</h1>
         <Show when="signed-out">
-          {route === 'sign-in' ? (
+          {route === 'native-auth' ? (
+            <AuthView mode="signInOrUp" />
+          ) : route === 'sign-in' ? (
             <SignIn onSwitchToSignUp={() => setRoute('sign-up')} />
           ) : (
             <SignUp onSwitchToSignIn={() => setRoute('sign-in')} />
           )}
+          <div style={routeSwitcher}>
+            <button onClick={() => setRoute('native-auth')}>Native Auth</button>
+            <button onClick={() => setRoute('sign-in')}>Custom Sign In</button>
+          </div>
         </Show>
         <Show when="signed-in">
           <Home />
@@ -34,4 +41,10 @@ const layout: React.CSSProperties = {
   padding: 24,
   maxWidth: 480,
   margin: '0 auto',
+};
+
+const routeSwitcher: React.CSSProperties = {
+  display: 'flex',
+  gap: 8,
+  marginTop: 16,
 };
