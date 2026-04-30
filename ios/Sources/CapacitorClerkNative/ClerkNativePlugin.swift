@@ -68,9 +68,12 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async {
             self.sessionObserverTask?.cancel()
             self.sessionObserverTask = nil
-            self.authHostingController?.dismiss(animated: true)
+            guard let hc = self.authHostingController else {
+                call.resolve()
+                return
+            }
             self.authHostingController = nil
-            call.resolve()
+            hc.dismiss(animated: true) { call.resolve() }
         }
     }
 

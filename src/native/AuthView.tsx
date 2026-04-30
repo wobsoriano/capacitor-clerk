@@ -29,6 +29,9 @@ export function AuthView({ mode = 'signInOrUp' }: AuthViewProps) {
         });
 
         listenerHandle = await ClerkNativePlugin.addListener('authCompleted', async ({ sessionId }) => {
+          listenerHandle?.remove();
+          listenerHandle = null;
+          await ClerkNativePlugin.dismissAuth();
           await syncNativeSession(sessionId, clerk);
         });
 

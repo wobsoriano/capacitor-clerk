@@ -11,6 +11,7 @@ export async function syncNativeSession(sessionId: string, clerk: ReturnType<typ
 
   const clerkRecord = clerk as unknown as Record<string, unknown>;
   if (typeof clerkRecord.__internal_reloadInitialResources === 'function') {
+    console.log('[syncNativeSession] clerk.__internal_reloadInitialResources')
     await (clerkRecord.__internal_reloadInitialResources as () => Promise<void>)();
   }
 
