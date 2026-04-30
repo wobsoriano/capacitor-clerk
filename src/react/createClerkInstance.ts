@@ -22,6 +22,12 @@ export const CLERK_CLIENT_JWT_KEY = '__clerk_client_jwt';
  * Always wires `__internal_onBeforeRequest` and `__internal_onAfterResponse`
  * to drive Bearer-token auth via `?_is_native=1`..
  */
+let _cachedInstance: ClerkType | null = null;
+
+export function getCachedClerkInstance(): ClerkType | null {
+  return _cachedInstance;
+}
+
 export function createClerkInstance(
   ClerkClass: typeof ClerkType,
 ): (options: CreateClerkInstanceOptions) => ClerkType {
@@ -41,6 +47,7 @@ export function createClerkInstance(
     const clerk = new ClerkClass(publishableKey);
     attachRequestHooks(clerk, tokenCache, sdkVersion);
     cached = { key: publishableKey, instance: clerk };
+    _cachedInstance = clerk;
     return clerk;
   };
 }

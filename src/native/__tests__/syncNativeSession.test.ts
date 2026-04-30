@@ -18,12 +18,19 @@ vi.mock('../../token-cache', () => ({
   },
 }));
 
+const mockReloadInitialResources = vi.fn().mockResolvedValue(undefined);
+
+vi.mock('../../react/createClerkInstance', () => ({
+  CLERK_CLIENT_JWT_KEY: '__clerk_client_jwt',
+  getCachedClerkInstance: () => ({
+    __internal_reloadInitialResources: (...args: unknown[]) => mockReloadInitialResources(...args),
+  }),
+}));
+
 // eslint-disable-next-line import/first -- vi.mock calls are hoisted
 import { syncNativeSession } from '../syncNativeSession';
-import { CLERK_CLIENT_JWT_KEY } from '../../react/createClerkInstance';
 
 const makeClerk = (overrides: Record<string, unknown> = {}) => ({
-  __internal_reloadInitialResources: vi.fn().mockResolvedValue(undefined),
   setActive: vi.fn().mockResolvedValue(undefined),
   ...overrides,
 });
@@ -35,7 +42,7 @@ describe('syncNativeSession', () => {
     const clerk = makeClerk();
     await syncNativeSession('sess_123', clerk as never);
     expect(mockGetClientToken).toHaveBeenCalled();
-    expect(mockSaveToken).toHaveBeenCalledWith(CLERK_CLIENT_JWT_KEY, 'native-jwt-xyz');
+    expect(mockSaveToken).toHaveBeenCalledWith('__clerk_client_jwt', 'native-jwt-xyz');
   });
 
   it('skips saveToken when token is null', async () => {
@@ -45,10 +52,10 @@ describe('syncNativeSession', () => {
     expect(mockSaveToken).not.toHaveBeenCalled();
   });
 
-  it('calls __internal_reloadInitialResources', async () => {
+  it('calls __internal_reloadInitialResources on the raw clerk instance', async () => {
     const clerk = makeClerk();
     await syncNativeSession('sess_123', clerk as never);
-    expect(clerk.__internal_reloadInitialResources).toHaveBeenCalled();
+    expect(mockReloadInitialResources).toHaveBeenCalled();
   });
 
   it('calls setActive with the sessionId', async () => {
@@ -57,8 +64,12 @@ describe('syncNativeSession', () => {
     expect(clerk.setActive).toHaveBeenCalledWith({ session: 'sess_456' });
   });
 
-  it('skips __internal_reloadInitialResources when not present', async () => {
-    const clerk = makeClerk({ __internal_reloadInitialResources: undefined });
+  it('skips __internal_reloadInitialResources when getCachedClerkInstance returns null', async () => {
+    vi.doMock('../../react/createClerkInstance', () => ({
+      CLERK_CLIENT_JWT_KEY: '__clerk_client_jwt',
+      getCachedClerkInstance: () => null,
+    }));
+    const clerk = makeClerk();
     await expect(syncNativeSession('sess_123', clerk as never)).resolves.toBeUndefined();
   });
 });
