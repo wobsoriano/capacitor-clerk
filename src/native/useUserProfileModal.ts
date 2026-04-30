@@ -1,6 +1,5 @@
 import { useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
-import type { PluginListenerHandle } from '@capacitor/core';
 import { useClerk } from '@clerk/react';
 
 import { CLERK_CLIENT_JWT_KEY } from '../react/createClerkInstance';
@@ -24,25 +23,26 @@ export function useUserProfileModal(): UseUserProfileModalReturn {
       const bearerToken = (await tokenCache.getToken(CLERK_CLIENT_JWT_KEY)) ?? null;
       await ClerkNativePlugin.configure({ publishableKey: clerk.publishableKey!, bearerToken });
 
-      await new Promise<void>((resolve) => {
-        let handle: PluginListenerHandle | null = null;
-
-        const onDismiss = async () => {
-          handle?.remove();
-          await syncNativeSession();
-          resolve();
-        };
-
-        ClerkNativePlugin.addListener('profileDismissed', onDismiss).then((h) => {
-          handle = h;
-        });
-
-        ClerkNativePlugin.presentUserProfile().catch((e) => {
-          handle?.remove();
-          console.error('[useUserProfileModal] presentUserProfile error:', e);
-          resolve();
-        });
+      let resolvePromise!: () => void;
+      const dismissPromise = new Promise<void>((resolve) => {
+        resolvePromise = resolve;
       });
+
+      const handle = await ClerkNativePlugin.addListener('profileDismissed', async () => {
+        handle.remove();
+        await syncNativeSession();
+        resolvePromise();
+      });
+
+      try {
+        await ClerkNativePlugin.presentUserProfile();
+      } catch (e) {
+        handle.remove();
+        console.error('[useUserProfileModal] presentUserProfile error:', e);
+        resolvePromise();
+      }
+
+      await dismissPromise;
     } catch (e) {
       console.error('[useUserProfileModal] error:', e);
     } finally {
