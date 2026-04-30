@@ -21,6 +21,7 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
     private var profileHostingController: UIViewController?
     private var sessionObserverTask: Task<Void, Never>?
     private var initialSessionId: String?
+    private var isClerkConfigured = false
 
     // MARK: - configure
 
@@ -37,7 +38,12 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
             if let token = bearerToken, !token.isEmpty {
                 KeychainHelper.write(key: self.clerkDeviceTokenKey, value: token)
             }
-            Clerk.configure(publishableKey: publishableKey)
+            // Guard against calling Clerk.configure a second time in the same process:
+            // re-configuring resets the in-memory session even when the keychain token is valid.
+            if !isClerkConfigured {
+                Clerk.configure(publishableKey: publishableKey)
+                isClerkConfigured = true
+            }
             call.resolve()
         }
     }
