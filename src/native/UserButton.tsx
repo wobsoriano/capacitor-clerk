@@ -41,10 +41,8 @@ export function UserButton({ style }: UserButtonProps) {
 
   const handleClick = async () => {
     try {
-      const bearerToken = (await clerk.session?.getToken()) ?? null;
       await ClerkNativePlugin.configure({
         publishableKey: clerk.publishableKey!,
-        bearerToken,
       });
       await ClerkNativePlugin.presentUserProfile();
     } catch (e) {

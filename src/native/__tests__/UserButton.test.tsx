@@ -28,7 +28,6 @@ vi.mock('../syncNativeSession', () => ({
   syncNativeSession: (...args: unknown[]) => mockSyncNativeSession(...args),
 }));
 
-const mockGetToken = vi.fn().mockResolvedValue('test-bearer-token');
 const mockUser = vi.hoisted(() => ({
   imageUrl: 'https://example.com/avatar.jpg',
   fullName: 'Test User',
@@ -38,10 +37,7 @@ const mockUser = vi.hoisted(() => ({
 
 vi.mock('@clerk/react', () => ({
   useUser: vi.fn().mockReturnValue({ user: mockUser, isLoaded: true }),
-  useClerk: vi.fn().mockReturnValue({
-    publishableKey: 'pk_test_xxx',
-    session: { getToken: () => mockGetToken() },
-  }),
+  useClerk: vi.fn().mockReturnValue({ publishableKey: 'pk_test_xxx' }),
 }));
 
 // eslint-disable-next-line import/first -- vi.mock calls are hoisted
@@ -102,7 +98,6 @@ describe('<UserButton>', () => {
     await vi.waitFor(() => expect(mockPresentUserProfile).toHaveBeenCalled());
     expect(mockConfigure).toHaveBeenCalledWith({
       publishableKey: 'pk_test_xxx',
-      bearerToken: 'test-bearer-token',
     });
   });
 
