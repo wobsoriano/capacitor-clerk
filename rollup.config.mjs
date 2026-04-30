@@ -44,5 +44,6 @@ const entry = (input, file) => ({
 export default [
   entry('src/index.ts', 'dist/esm/index.js'),
   entry('src/react/index.ts', 'dist/esm/react/index.js'),
+  entry('src/apple/index.ts', 'dist/esm/apple/index.js'),
   entry('src/token-cache/index.ts', 'dist/esm/token-cache/index.js'),
 ];

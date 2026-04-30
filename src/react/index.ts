@@ -26,7 +26,4 @@ export type { ClerkProviderProps } from './ClerkProvider';
 export { useSSO } from './useSSO';
 export type { StartSSOFlowParams, StartSSOFlowReturnType } from './useSSO';
 
-export { useSignInWithApple } from './useSignInWithApple';
-export type { StartAppleAuthenticationFlowParams, StartAppleAuthenticationFlowReturnType } from './useSignInWithApple';
-
 export type { TokenCache } from '../definitions';

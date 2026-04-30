@@ -14,6 +14,10 @@
       "types": "./dist/esm/react/index.d.ts",
       "import": "./dist/esm/react/index.js"
     },
+    "./apple": {
+      "types": "./dist/esm/apple/index.d.ts",
+      "import": "./dist/esm/apple/index.js"
+    },
     "./token-cache": {
       "types": "./dist/esm/token-cache/index.d.ts",
       "import": "./dist/esm/token-cache/index.js"

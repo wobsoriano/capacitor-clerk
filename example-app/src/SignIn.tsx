@@ -1,4 +1,5 @@
-import { useSignIn, useSignInWithApple, useSSO } from 'capacitor-clerk';
+import { useSignIn, useSSO } from 'capacitor-clerk';
+import { useSignInWithApple } from 'capacitor-clerk/apple';
 import { useState } from 'react';
 
 const SSO_REDIRECT_URL = 'capacitorclerk://sso-callback';
