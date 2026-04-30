@@ -1,21 +1,27 @@
-import { useAuth, useUser } from 'capacitor-clerk';
-import { UserProfileView } from 'capacitor-clerk/native';
+import { useClerk, useUser } from 'capacitor-clerk';
+import { UserButton, UserProfileView } from 'capacitor-clerk/native';
 
 export function Home(): JSX.Element {
   const { user } = useUser();
-  const { signOut } = useAuth();
+  const { signOut } = useClerk();
 
   return (
-    <>
-      <div style={topBar}>
-        <span style={greeting}>Hello, {user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? 'friend'}.</span>
-        <button onClick={() => void signOut()} style={signOutButton}>Sign out</button>
+    <div style={wrap}>
+      <div style={header}>
+        <h2 style={{ margin: 0 }}>Hello, {user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? 'friend'}.</h2>
+        <UserButton style={{ width: 40, height: 40, borderRadius: '50%' }} />
       </div>
-      <UserProfileView isDismissable={false} style={{ position: 'fixed', inset: 0, top: 48 }} />
-    </>
+      <button onClick={() => void signOut()} style={button}>
+        Sign out
+      </button>
+      <div style={profileContainer}>
+        <UserProfileView isDismissable={false} style={{ width: '100%', height: '100%' }} />
+      </div>
+    </div>
   );
 }
 
-const topBar: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 48, padding: '0 16px', borderBottom: '1px solid #e5e7eb' };
-const greeting: React.CSSProperties = { fontSize: 15, fontWeight: 500 };
-const signOutButton: React.CSSProperties = { padding: '6px 12px', fontSize: 14, cursor: 'pointer' };
+const wrap: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12 };
+const header: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+const button: React.CSSProperties = { padding: '10px 16px', fontSize: 16, alignSelf: 'flex-start' };
+const profileContainer: React.CSSProperties = { width: '100%', height: 600 };
