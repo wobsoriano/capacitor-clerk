@@ -156,6 +156,38 @@ describe('<UserProfileView>', () => {
     });
   });
 
+  it('calls updateUserProfile when window scroll fires', async () => {
+    render(<UserProfileView />);
+    await vi.waitFor(() => expect(mockCreateUserProfile).toHaveBeenCalled());
+
+    act(() => window.dispatchEvent(new Event('scroll')));
+    expect(mockUpdateUserProfile).toHaveBeenCalledWith({
+      boundingRect: { x: 10, y: 20, width: 300, height: 600 },
+    });
+  });
+
+  it('does not leak native view when unmounted before createUserProfile resolves', async () => {
+    let resolveConfigure!: () => void;
+    mockConfigure.mockImplementationOnce(() => new Promise<void>((resolve) => { resolveConfigure = resolve; }));
+
+    const { unmount } = render(<UserProfileView />);
+    // Wait until configure has been called so resolveConfigure is assigned
+    await vi.waitFor(() => expect(mockConfigure).toHaveBeenCalled());
+
+    // Unmount while configure promise is still pending (before createUserProfile)
+    unmount();
+
+    // Clear counts from any previous-test teardown before asserting
+    mockCreateUserProfile.mockClear();
+    mockDestroyUserProfile.mockClear();
+
+    // Now resolve configure — setup should bail out due to cancelled flag
+    await act(async () => { resolveConfigure(); });
+
+    expect(mockCreateUserProfile).not.toHaveBeenCalled();
+    expect(mockDestroyUserProfile).not.toHaveBeenCalled();
+  });
+
   it('calls destroyUserProfile and removes listener on unmount', async () => {
     const { unmount } = render(<UserProfileView />);
     await vi.waitFor(() => expect(mockCreateUserProfile).toHaveBeenCalled());

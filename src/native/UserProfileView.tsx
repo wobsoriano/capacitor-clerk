@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { type CSSProperties, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useClerk } from '@clerk/react';
@@ -10,7 +10,7 @@ import { syncNativeSession } from './syncNativeSession';
 
 export interface UserProfileViewProps {
   isDismissable?: boolean;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   onProfileEvent?: (event: { type: string; data: string }) => void;
 }
 
@@ -28,6 +28,7 @@ export function UserProfileView({ isDismissable = false, style, onProfileEvent }
 
     let handle: PluginListenerHandle | null = null;
     let created = false;
+    let cancelled = false;
 
     const setup = async () => {
       if (!containerRef.current) return;
@@ -35,12 +36,15 @@ export function UserProfileView({ isDismissable = false, style, onProfileEvent }
         const bearerToken = (await tokenCache.getToken(CLERK_CLIENT_JWT_KEY)) ?? null;
         await ClerkNativePlugin.configure({ publishableKey: clerk.publishableKey!, bearerToken });
 
-        if (!containerRef.current) return;
+        if (cancelled || !containerRef.current) return;
+
         const rect = containerRef.current.getBoundingClientRect();
         await ClerkNativePlugin.createUserProfile({
           boundingRect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
           isDismissable,
         });
+
+        if (cancelled) { void ClerkNativePlugin.destroyUserProfile(); return; }
         created = true;
 
         handle = await ClerkNativePlugin.addListener('profileEvent', (event) => {
@@ -68,13 +72,25 @@ export function UserProfileView({ isDismissable = false, style, onProfileEvent }
       observer.observe(containerRef.current);
     }
 
+    const onScroll = () => {
+      if (!containerRef.current || !created) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      void ClerkNativePlugin.updateUserProfile({
+        boundingRect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+
     return () => {
+      cancelled = true;
       observer.disconnect();
+      window.removeEventListener('scroll', onScroll, { capture: true });
       handle?.remove();
       if (created) {
         void ClerkNativePlugin.destroyUserProfile();
       }
     };
+  // isDismissable is a native-level property; changing it requires re-creating the native view.
   }, [isDismissable]);
 
   if (!Capacitor.isNativePlatform()) return null;
