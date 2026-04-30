@@ -9,7 +9,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm", from: "8.0.0"),
-        .package(url: "https://github.com/clerk/clerk-ios", from: "2.0.0"),
+        .package(url: "https://github.com/clerk/clerk-ios", from: "1.0.0"),
     ],
     targets: [
         .target(
