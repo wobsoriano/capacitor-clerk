@@ -30,21 +30,20 @@ const tsPluginOptions = {
   },
 };
 
-const entry = (input, file) => ({
-  input,
+export default {
+  input: {
+    'index':             'src/index.ts',
+    'react/index':       'src/react/index.ts',
+    'native/index':      'src/native/index.ts',
+    'apple/index':       'src/apple/index.ts',
+    'token-cache/index': 'src/token-cache/index.ts',
+  },
   external,
   output: {
-    file,
+    dir: 'dist/esm',
     format: 'esm',
     sourcemap: true,
+    chunkFileNames: '_shared/[name].js',
   },
   plugins: [typescript(tsPluginOptions)],
-});
-
-export default [
-  entry('src/index.ts', 'dist/esm/index.js'),
-  entry('src/react/index.ts', 'dist/esm/react/index.js'),
-  entry('src/apple/index.ts', 'dist/esm/apple/index.js'),
-  entry('src/token-cache/index.ts', 'dist/esm/token-cache/index.js'),
-  entry('src/native/index.ts', 'dist/esm/native/index.js'),
-];
+};
