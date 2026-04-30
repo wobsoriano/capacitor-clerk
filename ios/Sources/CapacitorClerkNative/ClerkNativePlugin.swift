@@ -21,7 +21,6 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
     private var profileHostingController: UIViewController?
     private var sessionObserverTask: Task<Void, Never>?
     private var initialSessionId: String?
-    private var isClerkConfigured = false
 
     // MARK: - configure
 
@@ -33,17 +32,13 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
         let bearerToken = call.getString("bearerToken")
 
         Task { @MainActor in
-            // Write JS SDK token to the Keychain slot clerk-ios reads ("clerkDeviceToken"),
-            // so both SDKs share the same session from the start.
+            // Write the current JS client JWT to the keychain slot clerk-ios reads.
+            // This must happen on every configure call so that any token rotation that
+            // occurred on the JS side is reflected before clerk-ios makes API calls.
             if let token = bearerToken, !token.isEmpty {
                 KeychainHelper.write(key: self.clerkDeviceTokenKey, value: token)
             }
-            // Guard against calling Clerk.configure a second time in the same process:
-            // re-configuring resets the in-memory session even when the keychain token is valid.
-            if !isClerkConfigured {
-                Clerk.configure(publishableKey: publishableKey)
-                isClerkConfigured = true
-            }
+            Clerk.configure(publishableKey: publishableKey)
             call.resolve()
         }
     }
@@ -203,7 +198,14 @@ private final class ProfileHostingController: UIHostingController<AnyView> {
 
 private struct UserProfileSheetView: View {
     var body: some View {
-        UserProfileView()
-            .environment(Clerk.shared)
+        // Clerk.shared is @Observable; accessing .session here creates a dependency so the
+        // view re-renders once the session loads after Clerk.configure reinitializes.
+        if Clerk.shared.session != nil {
+            UserProfileView()
+                .environment(Clerk.shared)
+        } else {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
     }
 }

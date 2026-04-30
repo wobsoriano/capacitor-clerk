@@ -28,6 +28,16 @@ vi.mock('../syncNativeSession', () => ({
   syncNativeSession: (...args: unknown[]) => mockSyncNativeSession(...args),
 }));
 
+const mockGetTokenFromCache = vi.fn().mockResolvedValue('cached-client-jwt');
+
+vi.mock('../../token-cache', () => ({
+  tokenCache: { getToken: (...args: unknown[]) => mockGetTokenFromCache(...args) },
+}));
+
+vi.mock('../../react/createClerkInstance', () => ({
+  CLERK_CLIENT_JWT_KEY: '__clerk_client_jwt',
+}));
+
 const mockUser = vi.hoisted(() => ({
   imageUrl: 'https://example.com/avatar.jpg',
   fullName: 'Test User',
@@ -98,6 +108,7 @@ describe('<UserButton>', () => {
     await vi.waitFor(() => expect(mockPresentUserProfile).toHaveBeenCalled());
     expect(mockConfigure).toHaveBeenCalledWith({
       publishableKey: 'pk_test_xxx',
+      bearerToken: 'cached-client-jwt',
     });
   });
 

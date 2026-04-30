@@ -3,6 +3,8 @@ import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useClerk, useUser } from '@clerk/react';
 
+import { CLERK_CLIENT_JWT_KEY } from '../react/createClerkInstance';
+import { tokenCache } from '../token-cache';
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 import { syncNativeSession } from './syncNativeSession';
 
@@ -41,8 +43,10 @@ export function UserButton({ style }: UserButtonProps) {
 
   const handleClick = async () => {
     try {
+      const bearerToken = (await tokenCache.getToken(CLERK_CLIENT_JWT_KEY)) ?? null;
       await ClerkNativePlugin.configure({
         publishableKey: clerk.publishableKey!,
+        bearerToken,
       });
       await ClerkNativePlugin.presentUserProfile();
     } catch (e) {
