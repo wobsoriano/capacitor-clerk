@@ -1,9 +1,9 @@
-import type { LoadedClerk } from '@clerk/types';
+import type { useClerk } from '@clerk/react';
 import { CLERK_CLIENT_JWT_KEY } from '../react/createClerkInstance';
 import { tokenCache } from '../token-cache';
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 
-export async function syncNativeSession(sessionId: string, clerk: LoadedClerk): Promise<void> {
+export async function syncNativeSession(sessionId: string, clerk: ReturnType<typeof useClerk>): Promise<void> {
   const { token } = await ClerkNativePlugin.getClientToken();
   if (token) {
     await tokenCache?.saveToken(CLERK_CLIENT_JWT_KEY, token);
