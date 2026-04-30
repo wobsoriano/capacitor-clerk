@@ -11,6 +11,12 @@ npx cap sync
 
 `@aparajita/capacitor-secure-storage` is the storage backend used by the default `tokenCache`. It uses Keychain on iOS and EncryptedSharedPreferences on Android.
 
+### iOS native components (optional)
+
+`<AuthView>`, `<UserButton>`, `<UserProfileView>`, and `useUserProfileModal` from `capacitor-clerk/native` are powered by [clerk-ios](https://github.com/clerk/clerk-ios) and require one extra step: open your project in Xcode and add `capacitor-clerk` as a local Swift Package via **File > Add Package Dependencies**, pointing to `node_modules/capacitor-clerk`. Re-run this step after updating the package.
+
+Requires iOS 17+. The rest of the package (hooks, `<ClerkProvider>`, custom flows) works without this step.
+
 ## Required Capacitor config
 
 Enable `CapacitorHttp` in your `capacitor.config.json` (or `.ts`):
