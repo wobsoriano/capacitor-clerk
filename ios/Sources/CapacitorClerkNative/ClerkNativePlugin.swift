@@ -14,11 +14,15 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getClientToken",     returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "presentUserProfile", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "dismissUserProfile", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "createUserProfile",  returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateUserProfile",  returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "destroyUserProfile", returnType: CAPPluginReturnPromise),
     ]
 
     private let clerkDeviceTokenKey = "clerkDeviceToken"
     private var authHostingController: UIViewController?
     private var profileHostingController: UIViewController?
+    private var inlineProfileHostingController: UIViewController?
     private var sessionObserverTask: Task<Void, Never>?
     private var initialSessionId: String?
 
@@ -123,6 +127,72 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    // MARK: - createUserProfile (inline)
+
+    @objc func createUserProfile(_ call: CAPPluginCall) {
+        guard let rectObj = call.getObject("boundingRect") else {
+            call.reject("boundingRect is required")
+            return
+        }
+        let x      = rectObj["x"]      as? Double ?? 0
+        let y      = rectObj["y"]      as? Double ?? 0
+        let width  = rectObj["width"]  as? Double ?? 0
+        let height = rectObj["height"] as? Double ?? 0
+        let isDismissable = call.getBool("isDismissable") ?? false
+
+        DispatchQueue.main.async {
+            self.inlineProfileHostingController?.view.removeFromSuperview()
+            self.inlineProfileHostingController?.removeFromParent()
+            self.inlineProfileHostingController = nil
+
+            guard let webView = self.bridge?.webView else {
+                call.reject("WebView not available")
+                return
+            }
+
+            let hc = UIHostingController(rootView: AnyView(
+                InlineUserProfileView(isDismissable: isDismissable) { [weak self] type in
+                    self?.notifyListeners("profileEvent", data: ["type": type, "data": "{}"])
+                }
+            ))
+            hc.view.frame = CGRect(x: x, y: y, width: width, height: height)
+            hc.view.autoresizingMask = []
+            hc.view.backgroundColor = .systemBackground
+            webView.addSubview(hc.view)
+            self.inlineProfileHostingController = hc
+            call.resolve()
+        }
+    }
+
+    // MARK: - updateUserProfile (inline)
+
+    @objc func updateUserProfile(_ call: CAPPluginCall) {
+        guard let rectObj = call.getObject("boundingRect") else {
+            call.resolve()
+            return
+        }
+        let x      = rectObj["x"]      as? Double ?? 0
+        let y      = rectObj["y"]      as? Double ?? 0
+        let width  = rectObj["width"]  as? Double ?? 0
+        let height = rectObj["height"] as? Double ?? 0
+
+        DispatchQueue.main.async {
+            self.inlineProfileHostingController?.view.frame = CGRect(x: x, y: y, width: width, height: height)
+            call.resolve()
+        }
+    }
+
+    // MARK: - destroyUserProfile (inline)
+
+    @objc func destroyUserProfile(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            self.inlineProfileHostingController?.view.removeFromSuperview()
+            self.inlineProfileHostingController?.removeFromParent()
+            self.inlineProfileHostingController = nil
+            call.resolve()
+        }
+    }
+
     // MARK: - Helpers
 
     private func startSessionObserver() {
@@ -206,6 +276,38 @@ private struct UserProfileSheetView: View {
         } else {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}
+
+// MARK: - InlineUserProfileView
+
+private struct InlineUserProfileView: View {
+    let isDismissable: Bool
+    let onEvent: (String) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if isDismissable {
+                HStack {
+                    Spacer()
+                    Button("Done") { onEvent("dismissed") }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                }
+            }
+            if Clerk.shared.session != nil {
+                UserProfileView()
+                    .environment(Clerk.shared)
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .onChange(of: Clerk.shared.session == nil) { wasNil, isNilNow in
+            if isNilNow && !wasNil {
+                onEvent("signedOut")
+            }
         }
     }
 }
