@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
-import { useClerk, useUser } from '@clerk/react';
+import { useUser } from '@clerk/react';
 
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 import { syncNativeSession } from './syncNativeSession';
@@ -12,7 +12,6 @@ export interface UserButtonProps {
 
 export function UserButton({ style }: UserButtonProps) {
   const { user, isLoaded } = useUser();
-  const clerk = useClerk();
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
@@ -41,11 +40,6 @@ export function UserButton({ style }: UserButtonProps) {
 
   const handleClick = async () => {
     try {
-      const bearerToken = (await clerk.session?.getToken()) ?? null;
-      await ClerkNativePlugin.configure({
-        publishableKey: clerk.publishableKey!,
-        bearerToken,
-      });
       await ClerkNativePlugin.presentUserProfile();
     } catch (e) {
       console.error('[UserButton] presentUserProfile error:', e);

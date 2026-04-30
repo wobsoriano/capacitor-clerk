@@ -8,14 +8,12 @@ vi.mock('@capacitor/core', () => ({
 }));
 
 const mockRemove = vi.fn();
-const mockConfigure = vi.fn().mockResolvedValue(undefined);
 const mockPresentUserProfile = vi.fn().mockResolvedValue(undefined);
 const mockDismissUserProfile = vi.fn().mockResolvedValue(undefined);
 const mockAddListener = vi.fn().mockResolvedValue({ remove: mockRemove });
 
 vi.mock('../ClerkNativePlugin', () => ({
   ClerkNativePlugin: {
-    configure: (...args: unknown[]) => mockConfigure(...args),
     presentUserProfile: (...args: unknown[]) => mockPresentUserProfile(...args),
     dismissUserProfile: (...args: unknown[]) => mockDismissUserProfile(...args),
     addListener: (...args: unknown[]) => mockAddListener(...args),
@@ -28,7 +26,6 @@ vi.mock('../syncNativeSession', () => ({
   syncNativeSession: (...args: unknown[]) => mockSyncNativeSession(...args),
 }));
 
-const mockGetToken = vi.fn().mockResolvedValue('test-bearer-token');
 const mockUser = vi.hoisted(() => ({
   imageUrl: 'https://example.com/avatar.jpg',
   fullName: 'Test User',
@@ -38,16 +35,13 @@ const mockUser = vi.hoisted(() => ({
 
 vi.mock('@clerk/react', () => ({
   useUser: vi.fn().mockReturnValue({ user: mockUser, isLoaded: true }),
-  useClerk: vi.fn().mockReturnValue({
-    publishableKey: 'pk_test_xxx',
-    session: { getToken: () => mockGetToken() },
-  }),
 }));
 
 // eslint-disable-next-line import/first -- vi.mock calls are hoisted
 import { Capacitor } from '@capacitor/core';
 import { useUser } from '@clerk/react';
 import { UserButton } from '../UserButton';
+
 
 afterEach(() => vi.clearAllMocks());
 
@@ -95,15 +89,10 @@ describe('<UserButton>', () => {
     expect(screen.getByText('A')).toBeDefined();
   });
 
-  it('calls configure then presentUserProfile on click', async () => {
+  it('calls presentUserProfile on click', async () => {
     render(<UserButton />);
     fireEvent.click(screen.getByRole('button'));
     await vi.waitFor(() => expect(mockPresentUserProfile).toHaveBeenCalled());
-    expect(mockConfigure).toHaveBeenCalledWith({
-      publishableKey: 'pk_test_xxx',
-      bearerToken: 'test-bearer-token',
-    });
-    expect(mockPresentUserProfile).toHaveBeenCalled();
   });
 
   it('registers a profileDismissed listener on mount', async () => {
