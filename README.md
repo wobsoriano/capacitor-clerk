@@ -116,6 +116,21 @@ export function AuthScreen() {
 
 `mode` accepts `"signIn"`, `"signUp"`, or `"signInOrUp"` (default). On non-iOS platforms the component renders nothing.
 
+### `<UserButton>` (iOS only)
+
+`<UserButton>` renders a circular avatar button in the WebView. Tapping it presents the native clerk-ios `UserProfileView` as a full-screen modal. When the user dismisses the profile sheet, the JS Clerk session is automatically refreshed to reflect any changes.
+
+```tsx
+import { UserButton } from 'capacitor-clerk/native';
+
+// Place anywhere in your layout. Control size and shape via `style`.
+<UserButton style={{ width: 36, height: 36, borderRadius: '50%' }} />
+```
+
+The button renders the user's profile photo (`user.imageUrl`) or an initial letter fallback. On non-iOS platforms it renders nothing.
+
+**Requirements:** Same as `<AuthView>` — iOS 17+, `capacitor-clerk` added as a local SPM package in Xcode.
+
 ### Sign in with Apple (iOS native)
 
 Use `useSignInWithApple` from `capacitor-clerk/apple` for native iOS Sign in with Apple. This uses Apple's native sheet instead of a browser redirect:
