@@ -1,7 +1,6 @@
-import { useSignIn, useSSO } from 'capacitor-clerk';
+import { useSignIn, useSignInWithApple, useSSO } from 'capacitor-clerk';
 import { useState } from 'react';
 
-// Replace with your app's deep-link scheme registered in capacitor.config.json
 const SSO_REDIRECT_URL = 'capacitorclerk://sso-callback';
 
 interface SignInProps {
@@ -11,9 +10,11 @@ interface SignInProps {
 export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
   const { signIn, errors, fetchStatus } = useSignIn();
   const { startSSOFlow } = useSSO();
+  const { startAppleAuthenticationFlow } = useSignInWithApple();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [ssoLoading, setSsoLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [ssoError, setSsoError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -40,6 +41,21 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
       setSsoError(err instanceof Error ? err.message : 'SSO failed');
     } finally {
       setSsoLoading(false);
+    }
+  };
+
+  const onAppleSignIn = async () => {
+    setSsoError(null);
+    setAppleLoading(true);
+    try {
+      const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+      }
+    } catch (err) {
+      setSsoError(err instanceof Error ? err.message : 'Apple Sign-In failed');
+    } finally {
+      setAppleLoading(false);
     }
   };
 
@@ -82,8 +98,11 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
         <span style={dividerText}>or</span>
         <hr style={dividerLine} />
       </div>
-      <button type="button" onClick={onGoogleSignIn} disabled={ssoLoading} style={oauthButton}>
+      <button type="button" onClick={onGoogleSignIn} disabled={ssoLoading || appleLoading} style={oauthButton}>
         {ssoLoading ? 'Redirecting...' : 'Continue with Google'}
+      </button>
+      <button type="button" onClick={onAppleSignIn} disabled={ssoLoading || appleLoading} style={appleButton}>
+        {appleLoading ? 'Signing in...' : ' Sign in with Apple'}
       </button>
       {ssoError && <p style={errorStyle}>{ssoError}</p>}
       <button type="button" onClick={onSwitchToSignUp} style={linkButton}>
@@ -101,6 +120,15 @@ const oauthButton: React.CSSProperties = {
   fontSize: 16,
   background: '#fff',
   border: '1px solid #ddd',
+  borderRadius: 4,
+  cursor: 'pointer',
+};
+const appleButton: React.CSSProperties = {
+  padding: '10px 16px',
+  fontSize: 16,
+  background: '#000',
+  color: '#fff',
+  border: 'none',
   borderRadius: 4,
   cursor: 'pointer',
 };
