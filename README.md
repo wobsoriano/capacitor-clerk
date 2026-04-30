@@ -129,7 +129,7 @@ import { UserButton } from 'capacitor-clerk/native';
 
 The button renders the user's profile photo (`user.imageUrl`) or an initial letter fallback. On non-iOS platforms it renders nothing.
 
-**Requirements:** Same as `<AuthView>` — iOS 17+, `capacitor-clerk` added as a local SPM package in Xcode.
+**Requirements:** Same as `<AuthView>`: iOS 17+, `capacitor-clerk` added as a local SPM package in Xcode.
 
 ### Sign in with Apple (iOS native)
 
