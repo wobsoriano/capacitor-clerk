@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
 
-const publishableKey = 'pk_test_d2FybS10b3VjYW4tNjIuY2xlcmsuYWNjb3VudHMuZGV2JA';
+const publishableKey = 'pk_test_b3B0aW11bS1ob25leWJlZS01NS5jbGVyay5hY2NvdW50cy5kZXYk';
 if (!publishableKey) {
   throw new Error('Set VITE_CLERK_PUBLISHABLE_KEY in example-app/.env');
 }
