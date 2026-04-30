@@ -1,0 +1,143 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { render, fireEvent, screen } from '@testing-library/react';
+
+// --- Mocks ---
+
+vi.mock('@capacitor/core', () => ({
+  Capacitor: { isNativePlatform: vi.fn().mockReturnValue(true) },
+}));
+
+const mockRemove = vi.fn();
+const mockConfigure = vi.fn().mockResolvedValue(undefined);
+const mockPresentUserProfile = vi.fn().mockResolvedValue(undefined);
+const mockAddListener = vi.fn().mockResolvedValue({ remove: mockRemove });
+
+vi.mock('../ClerkNativePlugin', () => ({
+  ClerkNativePlugin: {
+    configure: (...args: unknown[]) => mockConfigure(...args),
+    presentUserProfile: (...args: unknown[]) => mockPresentUserProfile(...args),
+    addListener: (...args: unknown[]) => mockAddListener(...args),
+  },
+}));
+
+const mockReloadInitialResources = vi.fn().mockResolvedValue(undefined);
+const mockGetCachedClerkInstance = vi.fn().mockReturnValue({
+  __internal_reloadInitialResources: (...args: unknown[]) => mockReloadInitialResources(...args),
+});
+
+vi.mock('../../react/createClerkInstance', () => ({
+  getCachedClerkInstance: (...args: unknown[]) => mockGetCachedClerkInstance(...args),
+}));
+
+const mockGetToken = vi.fn().mockResolvedValue('test-bearer-token');
+const mockUser = vi.hoisted(() => ({
+  imageUrl: 'https://example.com/avatar.jpg',
+  fullName: 'Test User',
+  firstName: 'Test',
+  emailAddresses: [{ emailAddress: 'test@example.com' }],
+}));
+
+vi.mock('@clerk/react', () => ({
+  useUser: vi.fn().mockReturnValue({ user: mockUser, isLoaded: true }),
+  useClerk: vi.fn().mockReturnValue({
+    publishableKey: 'pk_test_xxx',
+    session: { getToken: () => mockGetToken() },
+  }),
+}));
+
+// eslint-disable-next-line import/first -- vi.mock calls are hoisted
+import { Capacitor } from '@capacitor/core';
+import { useUser } from '@clerk/react';
+import { UserButton } from '../UserButton';
+
+afterEach(() => vi.clearAllMocks());
+
+describe('<UserButton>', () => {
+  it('renders null on non-native platforms', () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValueOnce(false);
+    const { container } = render(<UserButton />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null when user is not loaded', () => {
+    vi.mocked(useUser).mockReturnValueOnce({ user: mockUser, isLoaded: false } as any);
+    const { container } = render(<UserButton />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null when user is null', () => {
+    vi.mocked(useUser).mockReturnValueOnce({ user: null, isLoaded: true } as any);
+    const { container } = render(<UserButton />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders an img when user has imageUrl', () => {
+    render(<UserButton />);
+    const img = screen.getByRole('img');
+    expect(img).toBeDefined();
+    expect(img.getAttribute('src')).toBe('https://example.com/avatar.jpg');
+  });
+
+  it('renders initials fallback when imageUrl is empty', () => {
+    vi.mocked(useUser).mockReturnValueOnce({
+      user: { ...mockUser, imageUrl: '' },
+      isLoaded: true,
+    } as any);
+    render(<UserButton />);
+    expect(screen.getByText('T')).toBeDefined();
+  });
+
+  it('falls back to email initial when firstName is absent', () => {
+    vi.mocked(useUser).mockReturnValueOnce({
+      user: { ...mockUser, imageUrl: '', firstName: null },
+      isLoaded: true,
+    } as any);
+    render(<UserButton />);
+    expect(screen.getByText('T')).toBeDefined(); // 't' from test@example.com, uppercased
+  });
+
+  it('calls configure then presentUserProfile on click', async () => {
+    render(<UserButton />);
+    fireEvent.click(screen.getByRole('button'));
+    await vi.waitFor(() => expect(mockPresentUserProfile).toHaveBeenCalled());
+    expect(mockConfigure).toHaveBeenCalledWith({
+      publishableKey: 'pk_test_xxx',
+      bearerToken: 'test-bearer-token',
+    });
+    expect(mockPresentUserProfile).toHaveBeenCalled();
+  });
+
+  it('registers a profileDismissed listener on mount', async () => {
+    render(<UserButton />);
+    await vi.waitFor(() => expect(mockAddListener).toHaveBeenCalled());
+    expect(mockAddListener).toHaveBeenCalledWith('profileDismissed', expect.any(Function));
+  });
+
+  it('calls __internal_reloadInitialResources when profileDismissed fires', async () => {
+    let dismissedHandler: (() => void) | undefined;
+    mockAddListener.mockImplementationOnce((_event: string, handler: () => void) => {
+      dismissedHandler = handler;
+      return Promise.resolve({ remove: mockRemove });
+    });
+
+    render(<UserButton />);
+    await vi.waitFor(() => expect(dismissedHandler).toBeDefined());
+    await dismissedHandler!();
+    expect(mockReloadInitialResources).toHaveBeenCalled();
+  });
+
+  it('removes the profileDismissed listener on unmount', async () => {
+    const { unmount } = render(<UserButton />);
+    await vi.waitFor(() => expect(mockAddListener).toHaveBeenCalled());
+    unmount();
+    expect(mockRemove).toHaveBeenCalled();
+  });
+
+  it('applies consumer style to the button', () => {
+    render(<UserButton style={{ width: 36, height: 36, borderRadius: '50%' }} />);
+    const btn = screen.getByRole('button');
+    expect(btn.style.width).toBe('36px');
+    expect(btn.style.height).toBe('36px');
+    expect(btn.style.borderRadius).toBe('50%');
+  });
+});
