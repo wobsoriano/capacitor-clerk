@@ -15,7 +15,7 @@ export interface ClerkNativePlugin {
   getClientToken(): Promise<{ token: string | null }>;
   presentUserProfile(): Promise<void>;
   dismissUserProfile(): Promise<void>;
-  createUserProfile(options: { boundingRect: BoundingRect; isDismissable: boolean }): Promise<void>;
+  createUserProfile(options: { boundingRect: BoundingRect; isDismissable?: boolean }): Promise<void>;
   updateUserProfile(options: { boundingRect: BoundingRect }): Promise<void>;
   destroyUserProfile(): Promise<void>;
   addListener(
@@ -28,7 +28,7 @@ export interface ClerkNativePlugin {
   ): Promise<PluginListenerHandle>;
   addListener(
     event: 'profileEvent',
-    handler: (data: { type: string; data: string }) => void,
+    handler: (event: { type: string; data: string }) => void,
   ): Promise<PluginListenerHandle>;
   removeAllListeners(): Promise<void>;
 }
