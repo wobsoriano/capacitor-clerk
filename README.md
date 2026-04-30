@@ -152,7 +152,7 @@ For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custo
 
 ## Limitations
 
-- **Web Clerk UI components not supported.** `<UserButton>`, `<SignIn>`, `<SignUp>`, `<UserProfile>`, `<OrganizationSwitcher>`, etc. don't work because `clerk-js` runs in `runtimeEnvironment: 'headless'`. Use the hooks to build custom flows, or use `<AuthView>` for the native iOS UI.
+- **Clerk's prebuilt web UI components not supported.** The web versions of `<SignIn>`, `<SignUp>`, `<UserProfile>`, `<OrganizationSwitcher>`, etc. don't work because `clerk-js` runs in `runtimeEnvironment: 'headless'`. Use the hooks to build custom flows, or use `<AuthView>` and `<UserButton>` from `capacitor-clerk/native` for the native iOS UI.
 - **`<AuthView>` is iOS only.** Android native auth (`clerk-android`) is not yet supported.
 - **Capacitor v6+ only.** Older Capacitor versions don't expose `CapacitorHttp` and won't intercept fetch the way this package needs.
 

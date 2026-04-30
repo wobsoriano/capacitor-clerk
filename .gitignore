@@ -71,3 +71,6 @@ captures
 
 # Clerk keys
 .env
+
+# Superpowers plans/specs (session artifacts)
+docs/superpowers/
