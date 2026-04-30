@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a `<ClerkAuthView>` React component to `capacitor-clerk` that presents Clerk's native iOS auth UI (from `clerk-ios`) as a full-screen modal over the Capacitor WebView, with session sync back to the JS SDK on completion.
+**Goal:** Add an `<AuthView>` React component to `capacitor-clerk` that presents Clerk's native iOS auth UI (from `clerk-ios`) as a full-screen modal over the Capacitor WebView, with session sync back to the JS SDK on completion.
 
 **Architecture:** A new `capacitor-clerk/native` subpath export contains the TypeScript Capacitor plugin wrapper and the React component. The native iOS code lives in `ios/Sources/CapacitorClerkNative/` and is distributed via SPM (`Package.swift`). Android is deferred. The inline embedding approach (Google Maps pattern) is also deferred for later use with `UserButton` and `UserProfileView`.
 
@@ -30,7 +30,7 @@
 | `ios/Sources/CapacitorClerkNative/ClerkNativePlugin.swift` | CAPPlugin subclass: configure, presentAuth, dismissAuth, getClientToken |
 | `ios/Sources/CapacitorClerkNative/KeychainHelper.swift` | Reads/writes the `__clerk_client_jwt` Keychain slot that clerk-ios uses |
 | `src/native/ClerkNativePlugin.ts` | TypeScript plugin interface + `registerPlugin` call |
-| `src/native/ClerkAuthView.tsx` | React component: calls configure+presentAuth on mount, syncs session on authCompleted event |
+| `src/native/AuthView.tsx` | React component: calls configure+presentAuth on mount, syncs session on authCompleted event |
 | `src/native/syncNativeSession.ts` | Mirrors Clerk Expo's syncNativeSession: reads client JWT, saves to token cache, reloads resources, sets active session |
 | `src/native/index.ts` | Subpath entry point re-exporting ClerkAuthView and its types |
 
@@ -72,7 +72,7 @@ No web fallback is provided. The component guards against non-native environment
 
 ## Section 2: React Component
 
-**`src/native/ClerkAuthView.tsx`:**
+**`src/native/AuthView.tsx`:**
 
 ```tsx
 import { useEffect } from 'react';
@@ -83,11 +83,11 @@ import { syncNativeSession } from './syncNativeSession';
 
 export type AuthViewMode = 'signIn' | 'signUp' | 'signInOrUp';
 
-export interface ClerkAuthViewProps {
+export interface AuthViewProps {
   mode?: AuthViewMode;
 }
 
-export function ClerkAuthView({ mode = 'signInOrUp' }: ClerkAuthViewProps) {
+export function AuthView({ mode = 'signInOrUp' }: AuthViewProps) {
   const clerk = useClerk();
 
   useEffect(() => {
@@ -373,8 +373,8 @@ entry('src/native/index.ts', 'dist/esm/native/index.js'),
 **`src/native/index.ts`:**
 
 ```ts
-export { ClerkAuthView } from './ClerkAuthView';
-export type { ClerkAuthViewProps, AuthViewMode } from './ClerkAuthView';
+export { AuthView } from './AuthView';
+export type { AuthViewProps, AuthViewMode } from './AuthView';
 ```
 
 ---
@@ -396,12 +396,12 @@ npx cap sync
 ```
 
 ```tsx
-import { ClerkAuthView } from 'capacitor-clerk/native';
+import { AuthView } from 'capacitor-clerk/native';
 
 // Renders nothing in the WebView. On iOS, presents Clerk's native
 // auth sheet full-screen. Session is automatically synced on completion.
 export function AuthScreen() {
-  return <ClerkAuthView mode="signInOrUp" />;
+  return <AuthView mode="signInOrUp" />;
 }
 ```
 
