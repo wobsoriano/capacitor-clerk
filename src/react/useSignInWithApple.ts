@@ -30,26 +30,25 @@ export function useSignInWithApple() {
       );
     }
 
-    let SignInWithApple: typeof import('@capacitor-community/apple-sign-in').SignInWithApple;
+    let pkg: typeof import('@capawesome/capacitor-apple-sign-in');
     try {
-      ({ SignInWithApple } = await import('@capacitor-community/apple-sign-in'));
+      pkg = await import('@capawesome/capacitor-apple-sign-in');
     } catch {
       throw new Error(
-        '@capacitor-community/apple-sign-in is required to use Sign in with Apple. ' +
-          'Install it: npm install @capacitor-community/apple-sign-in',
+        '@capawesome/capacitor-apple-sign-in is required to use Sign in with Apple. ' +
+          'Install it: npm install @capawesome/capacitor-apple-sign-in',
       );
     }
 
+    const { AppleSignIn, SignInScope } = pkg;
     const nonce = crypto.randomUUID();
 
-    let credential: Awaited<ReturnType<typeof SignInWithApple.authorize>>['response'];
+    let result: Awaited<ReturnType<typeof AppleSignIn.signIn>>;
     try {
-      ({ response: credential } = await SignInWithApple.authorize({
-        clientId: '',
-        redirectURI: '',
-        scopes: 'email name',
+      result = await AppleSignIn.signIn({
+        scopes: [SignInScope.Email, SignInScope.FullName],
         nonce,
-      }));
+      });
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'code' in error && error.code === 'ERR_CANCELED') {
         return { createdSessionId: null, setActive, signIn, signUp };
@@ -57,12 +56,12 @@ export function useSignInWithApple() {
       throw error;
     }
 
-    const { identityToken } = credential;
-    if (!identityToken) {
+    const { idToken } = result;
+    if (!idToken) {
       throw new Error('No identity token received from Apple Sign-In.');
     }
 
-    await signIn!.create({ strategy: 'oauth_token_apple', token: identityToken });
+    await signIn!.create({ strategy: 'oauth_token_apple', token: idToken });
 
     if (signIn!.firstFactorVerification.status === 'transferable') {
       await signUp!.create({ transfer: true, unsafeMetadata: params?.unsafeMetadata });

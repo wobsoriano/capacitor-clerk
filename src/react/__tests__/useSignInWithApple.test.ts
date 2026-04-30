@@ -8,11 +8,15 @@ vi.mock('@capacitor/core', () => ({
   },
 }));
 
-const mockAuthorize = vi.fn();
+const mockSignIn = vi.fn();
 
-vi.mock('@capacitor-community/apple-sign-in', () => ({
-  SignInWithApple: {
-    authorize: (...args: unknown[]) => mockAuthorize(...args),
+vi.mock('@capawesome/capacitor-apple-sign-in', () => ({
+  AppleSignIn: {
+    signIn: (...args: unknown[]) => mockSignIn(...args),
+  },
+  SignInScope: {
+    Email: 'EMAIL',
+    FullName: 'FULL_NAME',
   },
 }));
 
@@ -53,19 +57,19 @@ import { Capacitor } from '@capacitor/core';
 import { useSignIn, useSignUp } from '@clerk/react/legacy';
 import { useSignInWithApple } from '../useSignInWithApple';
 
-const makeCredentialResponse = (identityToken = 'apple-id-token-xyz') => ({
-  response: {
-    user: 'apple-user-id',
-    email: 'user@example.com',
-    givenName: 'Test',
-    familyName: 'User',
-    identityToken,
-    authorizationCode: 'auth-code',
-  },
+const makeSignInResult = (idToken: string | null = 'apple-id-token-xyz') => ({
+  idToken,
+  user: 'apple-user-id',
+  email: 'user@example.com',
+  givenName: 'Test',
+  familyName: 'User',
+  authorizationCode: 'auth-code',
+  realUserStatus: 1,
+  state: null,
 });
 
 beforeEach(() => {
-  mockAuthorize.mockResolvedValue(makeCredentialResponse());
+  mockSignIn.mockResolvedValue(makeSignInResult());
   vi.stubGlobal('crypto', { randomUUID: vi.fn(() => 'test-nonce-1234') });
 });
 
@@ -80,7 +84,7 @@ describe('useSignInWithApple', () => {
     const { startAppleAuthenticationFlow } = useSignInWithApple();
     const result = await startAppleAuthenticationFlow();
     expect(result.createdSessionId).toBeNull();
-    expect(mockAuthorize).not.toHaveBeenCalled();
+    expect(mockSignIn).not.toHaveBeenCalled();
   });
 
   it('returns null createdSessionId when signUp is not loaded', async () => {
@@ -88,7 +92,7 @@ describe('useSignInWithApple', () => {
     const { startAppleAuthenticationFlow } = useSignInWithApple();
     const result = await startAppleAuthenticationFlow();
     expect(result.createdSessionId).toBeNull();
-    expect(mockAuthorize).not.toHaveBeenCalled();
+    expect(mockSignIn).not.toHaveBeenCalled();
   });
 
   it('throws on non-iOS platform with actionable message pointing to useSSO', async () => {
@@ -100,14 +104,14 @@ describe('useSignInWithApple', () => {
     expect((error as Error).message).toContain('useSSO');
   });
 
-  it('throws when identityToken is missing from credential', async () => {
-    mockAuthorize.mockResolvedValueOnce(makeCredentialResponse(null as unknown as string));
+  it('throws when idToken is missing from result', async () => {
+    mockSignIn.mockResolvedValueOnce(makeSignInResult(null));
     const { startAppleAuthenticationFlow } = useSignInWithApple();
     await expect(startAppleAuthenticationFlow()).rejects.toThrow(/no identity token/i);
   });
 
   it('returns null createdSessionId when user cancels Apple sheet', async () => {
-    mockAuthorize.mockRejectedValueOnce(Object.assign(new Error('Canceled'), { code: 'ERR_CANCELED' }));
+    mockSignIn.mockRejectedValueOnce(Object.assign(new Error('Canceled'), { code: 'ERR_CANCELED' }));
     const { startAppleAuthenticationFlow } = useSignInWithApple();
     const result = await startAppleAuthenticationFlow();
     expect(result.createdSessionId).toBeNull();
@@ -123,10 +127,8 @@ describe('useSignInWithApple', () => {
     const { startAppleAuthenticationFlow } = useSignInWithApple();
     const result = await startAppleAuthenticationFlow();
 
-    expect(mockAuthorize).toHaveBeenCalledWith({
-      clientId: '',
-      redirectURI: '',
-      scopes: 'email name',
+    expect(mockSignIn).toHaveBeenCalledWith({
+      scopes: ['EMAIL', 'FULL_NAME'],
       nonce: 'test-nonce-1234',
     });
     expect(mockSignInCreate).toHaveBeenCalledWith({

@@ -10,12 +10,12 @@
   },
   "dependencies": {
     "@aparajita/capacitor-secure-storage": "^8.0.0",
-    "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "latest",
     "@capacitor/ios": "^8.0.0",
+    "@capawesome/capacitor-apple-sign-in": "^0.1.0",
     "capacitor-clerk": "file:..",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
