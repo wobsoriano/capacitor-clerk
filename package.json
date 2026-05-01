@@ -24,28 +24,28 @@
     "Package.swift"
   ],
   "type": "module",
-  "module": "dist/esm/index.mjs",
-  "types": "dist/esm/index.d.mts",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.mts",
-      "import": "./dist/esm/index.mjs"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./react": {
-      "types": "./dist/esm/react/index.d.mts",
-      "import": "./dist/esm/react/index.mjs"
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
     },
     "./apple": {
-      "types": "./dist/esm/apple/index.d.mts",
-      "import": "./dist/esm/apple/index.mjs"
+      "types": "./dist/apple/index.d.ts",
+      "import": "./dist/apple/index.js"
     },
     "./token-cache": {
-      "types": "./dist/esm/token-cache/index.d.mts",
-      "import": "./dist/esm/token-cache/index.mjs"
+      "types": "./dist/token-cache/index.d.ts",
+      "import": "./dist/token-cache/index.js"
     },
     "./native": {
-      "types": "./dist/esm/native/index.d.mts",
-      "import": "./dist/esm/native/index.mjs"
+      "types": "./dist/native/index.d.ts",
+      "import": "./dist/native/index.js"
     },
     "./package.json": "./package.json"
   },

@@ -10,10 +10,10 @@ export default defineConfig({
       'token-cache/index': 'src/token-cache/index.ts',
     },
     format: ['esm'],
-    outDir: 'dist/esm',
     sourcemap: true,
     dts: true,
     clean: true,
+    outExtensions: () => ({ js: '.js', dts: '.d.ts' }),
     deps: {
       neverBundle: [
         '@aparajita/capacitor-secure-storage',
