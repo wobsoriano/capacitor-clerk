@@ -42,9 +42,7 @@ export function UserButton({ style }: UserButtonProps) {
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (
-        <span style={{ fontSize: '0.5em', fontWeight: 600, userSelect: 'none' }}>
-          {initial}
-        </span>
+        <span style={{ fontSize: '0.5em', fontWeight: 600, userSelect: 'none' }}>{initial}</span>
       )}
     </button>
   );

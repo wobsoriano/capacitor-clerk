@@ -1,4 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+// eslint-disable-next-line import/first -- vi.mock calls are hoisted; this resolves to the mocks.
+import { Capacitor } from '@capacitor/core';
+import { useSignIn, useSignUp } from '@clerk/react/legacy';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+
+import { useSignInWithApple } from '../useSignInWithApple';
 
 // --- Module mocks ---
 
@@ -52,11 +57,6 @@ vi.mock('@clerk/react/legacy', () => ({
   useSignUp: vi.fn(() => ({ isLoaded: true, signUp: makeSignUp() })),
 }));
 
-// eslint-disable-next-line import/first -- vi.mock calls are hoisted; this resolves to the mocks.
-import { Capacitor } from '@capacitor/core';
-import { useSignIn, useSignUp } from '@clerk/react/legacy';
-import { useSignInWithApple } from '../useSignInWithApple';
-
 const makeSignInResult = (idToken: string | null = 'apple-id-token-xyz') => ({
   idToken,
   user: 'apple-user-id',
@@ -80,7 +80,11 @@ afterEach(() => {
 
 describe('useSignInWithApple', () => {
   it('returns null createdSessionId when signIn is not loaded', async () => {
-    vi.mocked(useSignIn).mockReturnValueOnce({ isLoaded: false, setActive: mockSetActive, signIn: null } as never);
+    vi.mocked(useSignIn).mockReturnValueOnce({
+      isLoaded: false,
+      setActive: mockSetActive,
+      signIn: null,
+    } as never);
     const { startAppleAuthenticationFlow } = useSignInWithApple();
     const result = await startAppleAuthenticationFlow();
     expect(result.createdSessionId).toBeNull();
@@ -111,7 +115,9 @@ describe('useSignInWithApple', () => {
   });
 
   it('returns null createdSessionId when user cancels Apple sheet', async () => {
-    mockSignIn.mockRejectedValueOnce(Object.assign(new Error('Canceled'), { code: 'ERR_CANCELED' }));
+    mockSignIn.mockRejectedValueOnce(
+      Object.assign(new Error('Canceled'), { code: 'ERR_CANCELED' }),
+    );
     const { startAppleAuthenticationFlow } = useSignInWithApple();
     const result = await startAppleAuthenticationFlow();
     expect(result.createdSessionId).toBeNull();
@@ -152,7 +158,10 @@ describe('useSignInWithApple', () => {
     const { startAppleAuthenticationFlow } = useSignInWithApple();
     const result = await startAppleAuthenticationFlow({ unsafeMetadata: { role: 'admin' } });
 
-    expect(mockSignUpCreate).toHaveBeenCalledWith({ transfer: true, unsafeMetadata: { role: 'admin' } });
+    expect(mockSignUpCreate).toHaveBeenCalledWith({
+      transfer: true,
+      unsafeMetadata: { role: 'admin' },
+    });
     expect(result.createdSessionId).toBe('sess_new_user');
   });
 });

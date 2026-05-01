@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 const recordedProps: Record<string, unknown>[] = [];
 vi.mock('@clerk/react/internal', () => ({

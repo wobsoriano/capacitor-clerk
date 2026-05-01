@@ -1,5 +1,5 @@
-import { useSignIn, useSignUp } from '@clerk/react/legacy';
 import { Capacitor } from '@capacitor/core';
+import { useSignIn, useSignUp } from '@clerk/react/legacy';
 import type { SetActive, SignInResource, SignUpResource } from '@clerk/shared/types';
 
 export type StartAppleAuthenticationFlowParams = {

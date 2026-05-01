@@ -59,7 +59,11 @@ interface ClerkInternalRequestHooks {
   __internal_onAfterResponse: (cb: (req: unknown, res: Response) => Promise<void>) => void;
 }
 
-function attachRequestHooks(clerk: ClerkType, tokenCache: TokenCache, sdkVersion: string | undefined): void {
+function attachRequestHooks(
+  clerk: ClerkType,
+  tokenCache: TokenCache,
+  sdkVersion: string | undefined,
+): void {
   const hooks = clerk as unknown as ClerkInternalRequestHooks;
 
   hooks.__internal_onBeforeRequest(async (req) => {

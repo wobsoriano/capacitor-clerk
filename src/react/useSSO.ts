@@ -1,5 +1,11 @@
 import { useSignIn, useSignUp } from '@clerk/react/legacy';
-import type { EnterpriseSSOStrategy, OAuthStrategy, SetActive, SignInResource, SignUpResource } from '@clerk/shared/types';
+import type {
+  EnterpriseSSOStrategy,
+  OAuthStrategy,
+  SetActive,
+  SignInResource,
+  SignUpResource,
+} from '@clerk/shared/types';
 
 export type StartSSOFlowParams = {
   redirectUrl: string;
@@ -25,7 +31,10 @@ export function useSSO() {
     let Browser: typeof import('@capacitor/browser').Browser;
     let App: typeof import('@capacitor/app').App;
     try {
-      [{ Browser }, { App }] = await Promise.all([import('@capacitor/browser'), import('@capacitor/app')]);
+      [{ Browser }, { App }] = await Promise.all([
+        import('@capacitor/browser'),
+        import('@capacitor/app'),
+      ]);
     } catch {
       throw new Error(
         '@capacitor/browser and @capacitor/app are required for SSO. ' +
@@ -38,7 +47,9 @@ export function useSSO() {
     await signIn!.create({
       strategy: params.strategy,
       redirectUrl,
-      ...(params.strategy === 'enterprise_sso' ? { identifier: (params as { identifier: string }).identifier } : {}),
+      ...(params.strategy === 'enterprise_sso'
+        ? { identifier: (params as { identifier: string }).identifier }
+        : {}),
     });
 
     const { externalVerificationRedirectURL } = signIn!.firstFactorVerification;

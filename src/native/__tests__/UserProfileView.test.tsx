@@ -1,5 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Capacitor } from '@capacitor/core';
 import { render, act } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+
+// eslint-disable-next-line import/first -- vi.mock calls are hoisted
+
+import { UserProfileView } from '../UserProfileView';
 
 // --- Mocks ---
 
@@ -44,10 +49,6 @@ vi.mock('@clerk/react', () => ({
   useClerk: vi.fn().mockReturnValue({ publishableKey: 'pk_test_xxx' }),
 }));
 
-// eslint-disable-next-line import/first -- vi.mock calls are hoisted
-import { Capacitor } from '@capacitor/core';
-import { UserProfileView } from '../UserProfileView';
-
 // ResizeObserver mock — captures the callback so tests can trigger it
 let resizeCallback: ResizeObserverCallback | null = null;
 const mockObserve = vi.fn();
@@ -68,8 +69,15 @@ beforeEach(() => {
   );
 
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
-    left: 10, top: 20, width: 300, height: 600,
-    right: 310, bottom: 620, x: 10, y: 20, toJSON: () => ({}),
+    left: 10,
+    top: 20,
+    width: 300,
+    height: 600,
+    right: 310,
+    bottom: 620,
+    x: 10,
+    y: 20,
+    toJSON: () => ({}),
   } as DOMRect);
 });
 
@@ -160,7 +168,7 @@ describe('<UserProfileView>', () => {
     render(<UserProfileView />);
     await vi.waitFor(() => expect(mockCreateUserProfile).toHaveBeenCalled());
 
-    act(() => window.dispatchEvent(new Event('scroll')));
+    void act(() => window.dispatchEvent(new Event('scroll')));
     expect(mockUpdateUserProfile).toHaveBeenCalledWith({
       boundingRect: { x: 10, y: 20, width: 300, height: 600 },
     });
@@ -168,7 +176,12 @@ describe('<UserProfileView>', () => {
 
   it('does not leak native view when unmounted before createUserProfile resolves', async () => {
     let resolveConfigure!: () => void;
-    mockConfigure.mockImplementationOnce(() => new Promise<void>((resolve) => { resolveConfigure = resolve; }));
+    mockConfigure.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveConfigure = resolve;
+        }),
+    );
 
     const { unmount } = render(<UserProfileView />);
     // Wait until configure has been called so resolveConfigure is assigned
@@ -182,7 +195,9 @@ describe('<UserProfileView>', () => {
     mockDestroyUserProfile.mockClear();
 
     // Now resolve configure — setup should bail out due to cancelled flag
-    await act(async () => { resolveConfigure(); });
+    await act(async () => {
+      resolveConfigure();
+    });
 
     expect(mockCreateUserProfile).not.toHaveBeenCalled();
     expect(mockDestroyUserProfile).not.toHaveBeenCalled();

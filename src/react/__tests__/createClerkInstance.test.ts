@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import type { TokenCache } from '../../definitions';
 import { createClerkInstance } from '../createClerkInstance';
@@ -47,7 +47,9 @@ describe('createClerkInstance', () => {
   it('throws when publishableKey is missing', () => {
     const { ctor } = makeFakeClerk();
     const factory = createClerkInstance(ctor as never);
-    expect(() => factory({ publishableKey: '', tokenCache: memoryTokenCache() })).toThrow(/publishable key/i);
+    expect(() => factory({ publishableKey: '', tokenCache: memoryTokenCache() })).toThrow(
+      /publishable key/i,
+    );
   });
 
   it('returns a Clerk instance constructed with the publishableKey', () => {
@@ -89,7 +91,11 @@ describe('request hooks', () => {
 
     const headers = new Headers();
     const url = new URL('https://fapi.clerk.example.com/v1/environment');
-    const req = { headers, url } as { headers: Headers; url: URL; credentials?: RequestCredentials };
+    const req = { headers, url } as {
+      headers: Headers;
+      url: URL;
+      credentials?: RequestCredentials;
+    };
     await (capture.before as (r: typeof req) => Promise<void>)(req);
 
     expect(req.credentials).toBe('omit');
@@ -106,7 +112,11 @@ describe('request hooks', () => {
 
     const headers = new Headers();
     const url = new URL('https://fapi.clerk.example.com/v1/environment');
-    const req = { headers, url } as { headers: Headers; url: URL; credentials?: RequestCredentials };
+    const req = { headers, url } as {
+      headers: Headers;
+      url: URL;
+      credentials?: RequestCredentials;
+    };
     await (capture.before as (r: typeof req) => Promise<void>)(req);
 
     expect(headers.get('authorization')).toBeNull();

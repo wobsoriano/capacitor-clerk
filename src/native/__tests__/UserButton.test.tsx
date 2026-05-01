@@ -1,5 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+// eslint-disable-next-line import/first -- vi.mock calls are hoisted
+import { Capacitor } from '@capacitor/core';
+import { useUser } from '@clerk/react';
 import { render, fireEvent, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+
+import { UserButton } from '../UserButton';
 
 // --- Mocks ---
 
@@ -23,12 +28,6 @@ const mockUser = vi.hoisted(() => ({
 vi.mock('@clerk/react', () => ({
   useUser: vi.fn().mockReturnValue({ user: mockUser, isLoaded: true }),
 }));
-
-// eslint-disable-next-line import/first -- vi.mock calls are hoisted
-import { Capacitor } from '@capacitor/core';
-import { useUser } from '@clerk/react';
-import { UserButton } from '../UserButton';
-
 
 afterEach(() => vi.clearAllMocks());
 
@@ -69,7 +68,12 @@ describe('<UserButton>', () => {
 
   it('falls back to email initial when firstName is absent', () => {
     vi.mocked(useUser).mockReturnValueOnce({
-      user: { ...mockUser, imageUrl: '', firstName: null, emailAddresses: [{ emailAddress: 'alice@example.com' }] },
+      user: {
+        ...mockUser,
+        imageUrl: '',
+        firstName: null,
+        emailAddresses: [{ emailAddress: 'alice@example.com' }],
+      },
       isLoaded: true,
     } as any);
     render(<UserButton />);

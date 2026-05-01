@@ -74,9 +74,16 @@ export function SignIn() {
   return (
     <form onSubmit={onSubmit}>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
       {errors.global?.[0] && <p>{errors.global[0].message}</p>}
-      <button type="submit" disabled={fetchStatus === 'fetching'}>Sign in</button>
+      <button type="submit" disabled={fetchStatus === 'fetching'}>
+        Sign in
+      </button>
     </form>
   );
 }
@@ -95,7 +102,7 @@ const { startSSOFlow } = useSSO();
 
 const { createdSessionId, setActive } = await startSSOFlow({
   strategy: 'oauth_google',
-  redirectUrl: 'myapp://sso-callback',  // your app's deep-link scheme
+  redirectUrl: 'myapp://sso-callback', // your app's deep-link scheme
 });
 if (createdSessionId && setActive) {
   await setActive({ session: createdSessionId });
@@ -130,7 +137,7 @@ export function AuthScreen() {
 import { UserButton } from 'capacitor-clerk/native';
 
 // Place anywhere in your layout. Control size and shape via `style`.
-<UserButton style={{ width: 36, height: 36, borderRadius: '50%' }} />
+<UserButton style={{ width: 36, height: 36, borderRadius: '50%' }} />;
 ```
 
 The button renders the user's profile photo (`user.imageUrl`) or an initial letter fallback. On non-iOS platforms it renders nothing.
@@ -165,6 +172,7 @@ export function ProfilePage() {
 ```
 
 Props:
+
 - `style?: React.CSSProperties`: controls the placeholder div size and position; the native view matches it
 - `isDismissable?: boolean`: when `true`, shows a native "Done" button — use this when the view is in a sheet or panel the user can close. When `false` (default), no button is shown, suitable for fullscreen usage where navigation replaces dismissal
 - `onProfileEvent?: (event: { type: string; data: string }) => void`: called on native events; `type` is `"signedOut"` when the user signs out or deletes their account from within the view

@@ -74,9 +74,7 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
           style={input}
         />
       </label>
-      {errors.fields.identifier && (
-        <p style={errorStyle}>{errors.fields.identifier.message}</p>
-      )}
+      {errors.fields.identifier && <p style={errorStyle}>{errors.fields.identifier.message}</p>}
       <label>
         Password
         <input
@@ -87,9 +85,7 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
           style={input}
         />
       </label>
-      {errors.fields.password && (
-        <p style={errorStyle}>{errors.fields.password.message}</p>
-      )}
+      {errors.fields.password && <p style={errorStyle}>{errors.fields.password.message}</p>}
       {errors.global?.[0] && <p style={errorStyle}>{errors.global[0].message}</p>}
       <button type="submit" disabled={fetchStatus === 'fetching'} style={button}>
         {fetchStatus === 'fetching' ? 'Signing in...' : 'Sign in'}
@@ -99,10 +95,20 @@ export function SignIn({ onSwitchToSignUp }: SignInProps): JSX.Element {
         <span style={dividerText}>or</span>
         <hr style={dividerLine} />
       </div>
-      <button type="button" onClick={onGoogleSignIn} disabled={ssoLoading || appleLoading} style={oauthButton}>
+      <button
+        type="button"
+        onClick={onGoogleSignIn}
+        disabled={ssoLoading || appleLoading}
+        style={oauthButton}
+      >
         {ssoLoading ? 'Redirecting...' : 'Continue with Google'}
       </button>
-      <button type="button" onClick={onAppleSignIn} disabled={ssoLoading || appleLoading} style={appleButton}>
+      <button
+        type="button"
+        onClick={onAppleSignIn}
+        disabled={ssoLoading || appleLoading}
+        style={appleButton}
+      >
         {appleLoading ? 'Signing in...' : 'Sign in with Apple'}
       </button>
       {ssoError && <p style={errorStyle}>{ssoError}</p>}

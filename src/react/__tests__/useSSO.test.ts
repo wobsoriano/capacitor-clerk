@@ -1,4 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useSignIn, useSignUp } from '@clerk/react/legacy';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+
+// eslint-disable-next-line import/first -- vi.mock calls are hoisted; this resolves to the mocks.
+import { useSSO } from '../useSSO';
 
 // --- Listener capture slots (written to by mocks, read by tests) ---
 let capturedAppUrlOpen: ((event: { url: string }) => void) | null = null;
@@ -62,10 +66,6 @@ vi.mock('@clerk/react/legacy', () => ({
   useSignUp: vi.fn(() => ({ isLoaded: true, signUp: makeSignUp() })),
 }));
 
-// eslint-disable-next-line import/first -- vi.mock calls are hoisted; this resolves to the mocks.
-import { useSignIn, useSignUp } from '@clerk/react/legacy';
-import { useSSO } from '../useSSO';
-
 beforeEach(() => {
   capturedAppUrlOpen = null;
   capturedBrowserFinished = null;
@@ -77,16 +77,26 @@ afterEach(() => {
 
 describe('useSSO', () => {
   it('returns null createdSessionId when signIn is not loaded', async () => {
-    vi.mocked(useSignIn).mockReturnValueOnce({ isLoaded: false, setActive: mockSetActive, signIn: null } as never);
+    vi.mocked(useSignIn).mockReturnValueOnce({
+      isLoaded: false,
+      setActive: mockSetActive,
+      signIn: null,
+    } as never);
     const { startSSOFlow } = useSSO();
-    const result = await startSSOFlow({ strategy: 'oauth_google', redirectUrl: 'myapp://sso-callback' });
+    const result = await startSSOFlow({
+      strategy: 'oauth_google',
+      redirectUrl: 'myapp://sso-callback',
+    });
     expect(result.createdSessionId).toBeNull();
   });
 
   it('returns null createdSessionId when signUp is not loaded', async () => {
     vi.mocked(useSignUp).mockReturnValueOnce({ isLoaded: false, signUp: null } as never);
     const { startSSOFlow } = useSSO();
-    const result = await startSSOFlow({ strategy: 'oauth_google', redirectUrl: 'myapp://sso-callback' });
+    const result = await startSSOFlow({
+      strategy: 'oauth_google',
+      redirectUrl: 'myapp://sso-callback',
+    });
     expect(result.createdSessionId).toBeNull();
   });
 
@@ -94,17 +104,22 @@ describe('useSSO', () => {
     vi.mocked(useSignIn).mockReturnValueOnce({
       isLoaded: true,
       setActive: mockSetActive,
-      signIn: makeSignIn({ firstFactorVerification: { externalVerificationRedirectURL: null, status: 'pending' } }),
+      signIn: makeSignIn({
+        firstFactorVerification: { externalVerificationRedirectURL: null, status: 'pending' },
+      }),
     } as never);
     const { startSSOFlow } = useSSO();
-    await expect(startSSOFlow({ strategy: 'oauth_google', redirectUrl: 'myapp://sso-callback' })).rejects.toThrow(
-      /external verification redirect URL/i,
-    );
+    await expect(
+      startSSOFlow({ strategy: 'oauth_google', redirectUrl: 'myapp://sso-callback' }),
+    ).rejects.toThrow(/external verification redirect URL/i);
   });
 
   it('returns null createdSessionId when browser is dismissed without completing the flow', async () => {
     const { startSSOFlow } = useSSO();
-    const flowPromise = startSSOFlow({ strategy: 'oauth_google', redirectUrl: 'myapp://sso-callback' });
+    const flowPromise = startSSOFlow({
+      strategy: 'oauth_google',
+      redirectUrl: 'myapp://sso-callback',
+    });
 
     await vi.waitFor(() => expect(capturedBrowserFinished).not.toBeNull());
     capturedBrowserFinished!();
@@ -140,7 +155,12 @@ describe('useSSO', () => {
     vi.mocked(useSignIn).mockReturnValue({
       isLoaded: true,
       setActive: mockSetActive,
-      signIn: makeSignIn({ firstFactorVerification: { externalVerificationRedirectURL: new URL('https://accounts.google.com/oauth'), status: 'transferable' } }),
+      signIn: makeSignIn({
+        firstFactorVerification: {
+          externalVerificationRedirectURL: new URL('https://accounts.google.com/oauth'),
+          status: 'transferable',
+        },
+      }),
     } as never);
     vi.mocked(useSignUp).mockReturnValue({
       isLoaded: true,

@@ -1,10 +1,11 @@
-import { type CSSProperties, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useClerk } from '@clerk/react';
+import { type CSSProperties, useEffect, useRef } from 'react';
 
 import { CLERK_CLIENT_JWT_KEY } from '../react/createClerkInstance';
 import { tokenCache } from '../token-cache';
+
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 import { syncNativeSession } from './syncNativeSession';
 
@@ -14,7 +15,11 @@ export interface UserProfileViewProps {
   onProfileEvent?: (event: { type: string; data: string }) => void;
 }
 
-export function UserProfileView({ isDismissable = false, style, onProfileEvent }: UserProfileViewProps) {
+export function UserProfileView({
+  isDismissable = false,
+  style,
+  onProfileEvent,
+}: UserProfileViewProps) {
   const clerk = useClerk();
   const containerRef = useRef<HTMLDivElement>(null);
   const onProfileEventRef = useRef(onProfileEvent);
@@ -44,7 +49,10 @@ export function UserProfileView({ isDismissable = false, style, onProfileEvent }
           isDismissable,
         });
 
-        if (cancelled) { void ClerkNativePlugin.destroyUserProfile(); return; }
+        if (cancelled) {
+          void ClerkNativePlugin.destroyUserProfile();
+          return;
+        }
         created = true;
 
         handle = await ClerkNativePlugin.addListener('profileEvent', (event) => {
@@ -90,7 +98,7 @@ export function UserProfileView({ isDismissable = false, style, onProfileEvent }
         void ClerkNativePlugin.destroyUserProfile();
       }
     };
-  // isDismissable is a native-level property; changing it requires re-creating the native view.
+    // isDismissable is a native-level property; changing it requires re-creating the native view.
   }, [isDismissable]);
 
   if (!Capacitor.isNativePlatform()) return null;

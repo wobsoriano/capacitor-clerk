@@ -1,5 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Capacitor } from '@capacitor/core';
 import { render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+
+// eslint-disable-next-line import/first -- vi.mock calls are hoisted
+
+import { AuthView } from '../AuthView';
 
 // --- Mocks ---
 
@@ -34,10 +39,6 @@ vi.mock('@clerk/react', () => ({
     setActive: vi.fn(),
   }),
 }));
-
-// eslint-disable-next-line import/first -- vi.mock calls are hoisted
-import { Capacitor } from '@capacitor/core';
-import { AuthView } from '../AuthView';
 
 afterEach(() => vi.clearAllMocks());
 

@@ -2,71 +2,64 @@
   "name": "capacitor-clerk",
   "version": "0.6.0",
   "description": "Clerk authentication for Capacitor",
-  "type": "module",
-  "module": "dist/esm/index.js",
-  "types": "dist/esm/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/esm/index.d.ts",
-      "import": "./dist/esm/index.js"
-    },
-    "./react": {
-      "types": "./dist/esm/react/index.d.ts",
-      "import": "./dist/esm/react/index.js"
-    },
-    "./apple": {
-      "types": "./dist/esm/apple/index.d.ts",
-      "import": "./dist/esm/apple/index.js"
-    },
-    "./token-cache": {
-      "types": "./dist/esm/token-cache/index.d.ts",
-      "import": "./dist/esm/token-cache/index.js"
-    },
-    "./native": {
-      "types": "./dist/esm/native/index.d.ts",
-      "import": "./dist/esm/native/index.js"
-    },
-    "./package.json": "./package.json"
+  "keywords": [
+    "authentication",
+    "capacitor",
+    "clerk",
+    "headless",
+    "react"
+  ],
+  "bugs": {
+    "url": "https://github.com/wobsoriano/capacitor-clerk/issues"
+  },
+  "license": "MIT",
+  "author": "Robert Soriano",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wobsoriano/capacitor-clerk.git"
   },
   "files": [
     "dist/",
     "ios/",
     "Package.swift"
   ],
-  "capacitor": {
-    "ios": {
-      "src": "ios"
-    }
+  "type": "module",
+  "module": "dist/esm/index.mjs",
+  "types": "dist/esm/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.mts",
+      "import": "./dist/esm/index.mjs"
+    },
+    "./react": {
+      "types": "./dist/esm/react/index.d.mts",
+      "import": "./dist/esm/react/index.mjs"
+    },
+    "./apple": {
+      "types": "./dist/esm/apple/index.d.mts",
+      "import": "./dist/esm/apple/index.mjs"
+    },
+    "./token-cache": {
+      "types": "./dist/esm/token-cache/index.d.mts",
+      "import": "./dist/esm/token-cache/index.mjs"
+    },
+    "./native": {
+      "types": "./dist/esm/native/index.d.mts",
+      "import": "./dist/esm/native/index.mjs"
+    },
+    "./package.json": "./package.json"
   },
-  "author": "Robert Soriano",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/wobsoriano/capacitor-clerk.git"
-  },
-  "bugs": {
-    "url": "https://github.com/wobsoriano/capacitor-clerk/issues"
-  },
-  "keywords": [
-    "capacitor",
-    "clerk",
-    "authentication",
-    "react",
-    "headless"
-  ],
   "scripts": {
-    "verify": "npm run lint && npm run test && npm run build",
-    "lint": "npm run eslint && npm run prettier -- --check",
-    "fmt": "npm run eslint -- --fix && npm run prettier -- --write",
-    "eslint": "eslint . --ext ts,tsx",
-    "prettier": "prettier \"**/*.{css,html,ts,tsx,js}\"",
-    "build": "npm run clean && tsc && rollup -c rollup.config.mjs",
-    "clean": "rimraf ./dist",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "watch": "tsc --watch",
+    "verify": "vp check && vp test && npm run build",
+    "lint": "vp lint",
+    "lint:fix": "vp lint --fix",
+    "fmt": "vp fmt",
+    "build": "vp pack",
+    "test": "vp test run",
+    "test:watch": "vp test watch",
     "prepublishOnly": "npm run build",
-    "release": "bumpp && npm publish"
+    "release": "bumpp && npm publish",
+    "prepare": "vp config"
   },
   "dependencies": {
     "@clerk/clerk-js": "^6.0.0",
@@ -79,30 +72,24 @@
     "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "^8.3.1",
     "@capawesome/capacitor-apple-sign-in": "^0.1.0",
-    "@ionic/eslint-config": "^0.4.0",
-    "@ionic/prettier-config": "^4.0.0",
     "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.0",
     "bumpp": "^11.0.1",
-    "eslint": "^8.57.1",
     "happy-dom": "^15.0.0",
-    "prettier": "^3.6.2",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "rimraf": "^6.1.0",
-    "rollup": "^4.53.2",
-    "rollup-plugin-typescript2": "^0.36.0",
     "typescript": "^5.9.3",
-    "vitest": "^2.0.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vite-plus": "latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
   },
   "peerDependencies": {
     "@aparajita/capacitor-secure-storage": ">=8.0.0",
-    "@capawesome/capacitor-apple-sign-in": ">=0.1.0",
     "@capacitor/app": ">=8.0.0",
     "@capacitor/browser": ">=8.0.0",
     "@capacitor/core": ">=8.0.0",
+    "@capawesome/capacitor-apple-sign-in": ">=0.1.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
   },
@@ -120,8 +107,14 @@
       "optional": true
     }
   },
-  "prettier": "@ionic/prettier-config",
-  "eslintConfig": {
-    "extends": "@ionic/eslint-config/recommended"
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+  },
+  "packageManager": "npm@11.13.0",
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
   }
 }

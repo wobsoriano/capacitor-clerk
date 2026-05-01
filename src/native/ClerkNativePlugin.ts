@@ -15,17 +15,17 @@ export interface ClerkNativePlugin {
   getClientToken(): Promise<{ token: string | null }>;
   presentUserProfile(): Promise<void>;
   dismissUserProfile(): Promise<void>;
-  createUserProfile(options: { boundingRect: BoundingRect; isDismissable?: boolean }): Promise<void>;
+  createUserProfile(options: {
+    boundingRect: BoundingRect;
+    isDismissable?: boolean;
+  }): Promise<void>;
   updateUserProfile(options: { boundingRect: BoundingRect }): Promise<void>;
   destroyUserProfile(): Promise<void>;
   addListener(
     event: 'authCompleted',
     handler: (data: { sessionId: string }) => void,
   ): Promise<PluginListenerHandle>;
-  addListener(
-    event: 'profileDismissed',
-    handler: () => void,
-  ): Promise<PluginListenerHandle>;
+  addListener(event: 'profileDismissed', handler: () => void): Promise<PluginListenerHandle>;
   addListener(
     event: 'profileEvent',
     handler: (event: { type: string; data: string }) => void,

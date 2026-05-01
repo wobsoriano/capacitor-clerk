@@ -1,6 +1,5 @@
 import { SecureStorage } from '@aparajita/capacitor-secure-storage';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { tokenCache } from '../index';
 

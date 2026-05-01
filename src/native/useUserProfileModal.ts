@@ -1,9 +1,10 @@
-import { useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useClerk } from '@clerk/react';
+import { useCallback, useRef } from 'react';
 
 import { CLERK_CLIENT_JWT_KEY } from '../react/createClerkInstance';
 import { tokenCache } from '../token-cache';
+
 import { ClerkNativePlugin } from './ClerkNativePlugin';
 import { syncNativeSession } from './syncNativeSession';
 

@@ -75,9 +75,7 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps): JSX.Element {
           style={input}
         />
       </label>
-      {errors.fields.emailAddress && (
-        <p style={errorStyle}>{errors.fields.emailAddress.message}</p>
-      )}
+      {errors.fields.emailAddress && <p style={errorStyle}>{errors.fields.emailAddress.message}</p>}
       <label>
         Password
         <input
@@ -88,9 +86,7 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps): JSX.Element {
           style={input}
         />
       </label>
-      {errors.fields.password && (
-        <p style={errorStyle}>{errors.fields.password.message}</p>
-      )}
+      {errors.fields.password && <p style={errorStyle}>{errors.fields.password.message}</p>}
       {errors.global?.[0] && <p style={errorStyle}>{errors.global[0].message}</p>}
       <button type="submit" disabled={fetchStatus === 'fetching'} style={button}>
         {fetchStatus === 'fetching' ? 'Creating account...' : 'Create account'}

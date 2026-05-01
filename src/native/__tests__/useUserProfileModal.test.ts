@@ -1,5 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Capacitor } from '@capacitor/core';
 import { renderHook, act } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+
+// eslint-disable-next-line import/first -- vi.mock calls are hoisted
+
+import { useUserProfileModal } from '../useUserProfileModal';
 
 // --- Mocks ---
 
@@ -39,10 +44,6 @@ vi.mock('../../react/createClerkInstance', () => ({
 vi.mock('@clerk/react', () => ({
   useClerk: vi.fn().mockReturnValue({ publishableKey: 'pk_test_xxx' }),
 }));
-
-// eslint-disable-next-line import/first -- vi.mock calls are hoisted
-import { Capacitor } from '@capacitor/core';
-import { useUserProfileModal } from '../useUserProfileModal';
 
 afterEach(() => vi.clearAllMocks());
 
@@ -85,7 +86,9 @@ describe('useUserProfileModal', () => {
     const { result } = renderHook(() => useUserProfileModal());
     const promise = act(() => result.current.presentUserProfile());
 
-    await vi.waitFor(() => expect(mockAddListener).toHaveBeenCalledWith('profileDismissed', expect.any(Function)));
+    await vi.waitFor(() =>
+      expect(mockAddListener).toHaveBeenCalledWith('profileDismissed', expect.any(Function)),
+    );
     await vi.waitFor(() => expect(mockPresentUserProfile).toHaveBeenCalled());
 
     dismissedHandler!();
