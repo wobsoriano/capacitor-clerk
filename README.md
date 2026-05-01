@@ -126,13 +126,15 @@ For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custo
 
 ## Native components
 
-`<AuthView>`, `<UserButton>`, `<UserProfileView>`, and `useUserProfileModal` are iOS-only components powered by [clerk-ios](https://github.com/clerk/clerk-ios). They require one extra step after `npm install`: open your project in Xcode and add `capacitor-clerk` as a local Swift Package via **File > Add Package Dependencies**, pointing to `node_modules/capacitor-clerk`. Re-run this after updating the package.
+`<AuthView>`, `<UserButton>`, `<UserProfileView>`, and `useUserProfileModal` are native components powered by [clerk-ios](https://github.com/clerk/clerk-ios) on iOS and [clerk-android](https://github.com/clerk/clerk-android) on Android. They render nothing on web.
 
-Requires iOS 17+. All other hooks and `<ClerkProvider>` work without this step.
+**iOS setup:** After `npm install`, open your Xcode project and add `capacitor-clerk` as a local Swift Package via **File > Add Package Dependencies**, pointing to `node_modules/capacitor-clerk`. Re-run this after updating the package. Requires iOS 17+.
+
+**Android setup:** Run `npx cap sync android` — the plugin is auto-discovered. No additional steps required. Requires Android API 24+.
 
 ### `<AuthView>`
 
-Presents Clerk's native iOS auth UI as a full-screen modal. Handles the full flow: configure, present, dismiss, and sync the resulting session back to the JS SDK. Also restores an existing clerk-ios session transparently on app reload, so the user stays signed in across WebView refreshes.
+Presents Clerk's native auth UI as a full-screen modal. On iOS uses `clerk-ios`; on Android uses `clerk-android`. Handles the full flow: configure, present, dismiss, and sync the resulting session back to the JS SDK. Also restores an existing native session transparently on app reload, so the user stays signed in across WebView refreshes.
 
 ```tsx
 import { AuthView } from 'capacitor-clerk/native';
@@ -157,7 +159,7 @@ import { UserButton } from 'capacitor-clerk/native';
 <UserButton style={{ width: 36, height: 36, borderRadius: '50%' }} />;
 ```
 
-Renders the user's profile photo (`user.imageUrl`) or an initial letter fallback. On non-iOS platforms it renders nothing.
+Renders the user's profile photo (`user.imageUrl`) or an initial letter fallback. On non-native platforms it renders nothing.
 
 ### `<UserProfileView>`
 
@@ -210,13 +212,7 @@ The returned promise resolves when the modal is dismissed. Sign-out from within 
 ## Limitations
 
 - **Clerk's prebuilt web UI components not supported.** `clerk-js` runs headless, so `<SignIn>`, `<SignUp>`, `<UserProfile>`, etc. don't render. Use the hooks to build your own flows, or use the native components above.
-- **Native components are iOS only.** Android native auth (`clerk-android`) is not yet supported.
 - **Capacitor v6+ only.** Older Capacitor versions don't expose `CapacitorHttp` and won't intercept fetch the way this package needs.
-
-## Roadmap
-
-- Native components for Android via `clerk-android`.
-- Android testing for Sign in with Apple via `useSSO({ strategy: 'oauth_apple' })`.
 
 ## License
 

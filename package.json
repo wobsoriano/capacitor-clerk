@@ -21,6 +21,7 @@
   "files": [
     "dist/",
     "ios/",
+    "android/",
     "Package.swift"
   ],
   "type": "module",
@@ -115,6 +116,9 @@
   "capacitor": {
     "ios": {
       "src": "ios"
+    },
+    "android": {
+      "src": "android"
     }
   }
 }
