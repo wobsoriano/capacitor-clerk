@@ -62,9 +62,9 @@
     "prepare": "vp config"
   },
   "dependencies": {
-    "@clerk/clerk-js": "^6.0.0",
-    "@clerk/react": "^6.0.0",
-    "@clerk/shared": "^4.0.0"
+    "@clerk/clerk-js": "^6.7.9",
+    "@clerk/react": "^6.4.7",
+    "@clerk/shared": "^4.8.7"
   },
   "devDependencies": {
     "@aparajita/capacitor-secure-storage": "^8.0.0",
@@ -72,13 +72,13 @@
     "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "^8.3.1",
     "@capawesome/capacitor-apple-sign-in": "^0.1.0",
-    "@testing-library/react": "^16.0.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
     "bumpp": "^11.0.1",
-    "happy-dom": "^15.0.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
+    "happy-dom": "^15.11.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "typescript": "^5.9.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vite-plus": "latest",
