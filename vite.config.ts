@@ -13,7 +13,6 @@ export default defineConfig({
     sourcemap: true,
     dts: true,
     clean: true,
-    outExtensions: () => ({ js: '.js', dts: '.d.ts' }),
     deps: {
       neverBundle: [
         '@aparajita/capacitor-secure-storage',

@@ -24,28 +24,28 @@
     "Package.swift"
   ],
   "type": "module",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./react": {
-      "types": "./dist/react/index.d.ts",
-      "import": "./dist/react/index.js"
+      "types": "./dist/react/index.d.mts",
+      "import": "./dist/react/index.mjs"
     },
     "./apple": {
-      "types": "./dist/apple/index.d.ts",
-      "import": "./dist/apple/index.js"
+      "types": "./dist/apple/index.d.mts",
+      "import": "./dist/apple/index.mjs"
     },
     "./token-cache": {
-      "types": "./dist/token-cache/index.d.ts",
-      "import": "./dist/token-cache/index.js"
+      "types": "./dist/token-cache/index.d.mts",
+      "import": "./dist/token-cache/index.mjs"
     },
     "./native": {
-      "types": "./dist/native/index.d.ts",
-      "import": "./dist/native/index.js"
+      "types": "./dist/native/index.d.mts",
+      "import": "./dist/native/index.mjs"
     },
     "./package.json": "./package.json"
   },
