@@ -1,6 +1,6 @@
 {
   "name": "capacitor-clerk",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Clerk authentication for Capacitor apps, with native UI components",
   "keywords": [
     "authentication",
