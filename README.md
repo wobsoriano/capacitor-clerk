@@ -1,6 +1,6 @@
 # capacitor-clerk
 
-Clerk authentication for [Capacitor](https://capacitorjs.com/) apps.
+Clerk authentication for [Capacitor](https://capacitorjs.com/) apps, with native UI components.
 
 ## Install
 
@@ -10,12 +10,6 @@ npx cap sync
 ```
 
 `@aparajita/capacitor-secure-storage` is the storage backend used by the default `tokenCache`. It uses Keychain on iOS and EncryptedSharedPreferences on Android.
-
-### iOS native components (optional)
-
-`<AuthView>`, `<UserButton>`, `<UserProfileView>`, and `useUserProfileModal` from `capacitor-clerk/native` are powered by [clerk-ios](https://github.com/clerk/clerk-ios) and require one extra step: open your project in Xcode and add `capacitor-clerk` as a local Swift Package via **File > Add Package Dependencies**, pointing to `node_modules/capacitor-clerk`. Re-run this step after updating the package.
-
-Requires iOS 17+. The rest of the package (hooks, `<ClerkProvider>`, custom flows) works without this step.
 
 ## Required Capacitor config
 
@@ -49,7 +43,7 @@ export function App() {
 
 ## Custom flows
 
-This package re-exports Clerk's hooks (`useSignIn`, `useSignUp`, `useUser`, `useClerk`, `useAuth`, `useSession`, `useOrganization`, etc.) and `<Show>`. UI components (`<UserButton>`, `<SignIn>`, etc.) are intentionally not re-exported because the package runs `clerk-js` headless. Build your own forms.
+This package re-exports Clerk's hooks (`useSignIn`, `useSignUp`, `useUser`, `useClerk`, `useAuth`, `useSession`, `useOrganization`, etc.) and `<Show>`. UI components (`<SignIn>`, `<UserProfile>`, etc.) are intentionally not re-exported because the package runs `clerk-js` headless. Build your own forms.
 
 A minimal sign-in:
 
@@ -111,11 +105,34 @@ if (createdSessionId && setActive) {
 
 Requires `@capacitor/browser` and `@capacitor/app`. Register your redirect URL scheme in `Info.plist` (iOS) and `AndroidManifest.xml` (Android).
 
-### Native auth UI — `<AuthView>` (iOS only)
+### Sign in with Apple
 
-`<AuthView>` presents Clerk's native iOS auth UI (via [clerk-ios](https://github.com/clerk/clerk-ios)) as a full-screen modal. It handles the full flow: configure, present, dismiss, and sync the resulting session back to the JS SDK. It also restores an existing clerk-ios session transparently on app reload, so the user stays signed in across WebView refreshes.
+Use `useSignInWithApple` from `capacitor-clerk/apple` for native iOS Sign in with Apple. This uses Apple's native sheet instead of a browser redirect:
 
-**Requirements:** iOS 17+. After `npm install capacitor-clerk`, open Xcode and add the package via **File > Add Package Dependencies**, pointing to your `node_modules/capacitor-clerk` directory.
+```tsx
+import { useSignInWithApple } from 'capacitor-clerk/apple';
+
+const { startAppleAuthenticationFlow } = useSignInWithApple();
+
+const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
+if (createdSessionId && setActive) {
+  await setActive({ session: createdSessionId });
+}
+```
+
+Requires `@capawesome/capacitor-apple-sign-in` and the **Sign in with Apple** capability enabled in your Xcode project (Signing & Capabilities tab). iOS only — use `useSSO({ strategy: 'oauth_apple' })` on Android.
+
+For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custom-flows guides](https://clerk.com/docs/guides/development/custom-flows).
+
+## Native components
+
+`<AuthView>`, `<UserButton>`, `<UserProfileView>`, and `useUserProfileModal` are iOS-only components powered by [clerk-ios](https://github.com/clerk/clerk-ios). They require one extra step after `npm install`: open your project in Xcode and add `capacitor-clerk` as a local Swift Package via **File > Add Package Dependencies**, pointing to `node_modules/capacitor-clerk`. Re-run this after updating the package.
+
+Requires iOS 17+. All other hooks and `<ClerkProvider>` work without this step.
+
+### `<AuthView>`
+
+Presents Clerk's native iOS auth UI as a full-screen modal. Handles the full flow: configure, present, dismiss, and sync the resulting session back to the JS SDK. Also restores an existing clerk-ios session transparently on app reload, so the user stays signed in across WebView refreshes.
 
 ```tsx
 import { AuthView } from 'capacitor-clerk/native';
@@ -129,24 +146,22 @@ export function AuthScreen() {
 
 `mode` accepts `"signIn"`, `"signUp"`, or `"signInOrUp"` (default). On non-iOS platforms the component renders nothing.
 
-### `<UserButton>` (iOS only)
+### `<UserButton>`
 
-`<UserButton>` renders a circular avatar button in the WebView. Tapping it presents the native clerk-ios `UserProfileView` as a full-screen modal via `useUserProfileModal`. When the user dismisses the profile sheet, the JS Clerk session is automatically refreshed to reflect any changes.
+Renders a circular avatar button. Tapping it presents the native `UserProfileView` as a full-screen modal. When the user dismisses the sheet, the JS Clerk session is automatically refreshed.
 
 ```tsx
 import { UserButton } from 'capacitor-clerk/native';
 
-// Place anywhere in your layout. Control size and shape via `style`.
+// Control size and shape via `style`.
 <UserButton style={{ width: 36, height: 36, borderRadius: '50%' }} />;
 ```
 
-The button renders the user's profile photo (`user.imageUrl`) or an initial letter fallback. On non-iOS platforms it renders nothing.
+Renders the user's profile photo (`user.imageUrl`) or an initial letter fallback. On non-iOS platforms it renders nothing.
 
-**Requirements:** Same as `<AuthView>`: iOS 17+, `capacitor-clerk` added as a local SPM package in Xcode.
+### `<UserProfileView>`
 
-### `<UserProfileView>` (iOS only)
-
-`<UserProfileView>` embeds the native clerk-ios `UserProfileView` directly in your layout (not as a modal). The native view tracks the div's position and size, so you control placement entirely with CSS. Unmounting the component removes the native view.
+Embeds the native `UserProfileView` directly in your layout (not as a modal). The native view tracks the div's position and size, so you control placement entirely with CSS. Unmounting the component removes the native view.
 
 **Fullscreen** (dedicated profile screen, no dismiss button):
 
@@ -177,13 +192,9 @@ Props:
 - `isDismissable?: boolean`: when `true`, shows a native "Done" button — use this when the view is in a sheet or panel the user can close. When `false` (default), no button is shown, suitable for fullscreen usage where navigation replaces dismissal
 - `onProfileEvent?: (event: { type: string; data: string }) => void`: called on native events; `type` is `"signedOut"` when the user signs out or deletes their account from within the view
 
-Sign-out is detected automatically: when `type === "signedOut"` fires, the JS Clerk session is synced. Use `useAuth()` in a `useEffect` to react to the state change.
+### `useUserProfileModal()`
 
-**Requirements:** Same as `<AuthView>`: iOS 17+, `capacitor-clerk` added as a local SPM package in Xcode.
-
-### `useUserProfileModal()` (iOS only)
-
-`useUserProfileModal` is the hook powering `<UserButton>`. Use it directly when you want to trigger the native `UserProfileView` modal from a custom UI element.
+The hook powering `<UserButton>`. Use it directly when you want to trigger the native `UserProfileView` modal from a custom UI element.
 
 ```tsx
 import { useUserProfileModal } from 'capacitor-clerk/native';
@@ -196,36 +207,15 @@ function SettingsButton() {
 
 The returned promise resolves when the modal is dismissed. Sign-out from within the modal is detected and synced automatically.
 
-**Requirements:** Same as `<AuthView>`.
-
-### Sign in with Apple (iOS native)
-
-Use `useSignInWithApple` from `capacitor-clerk/apple` for native iOS Sign in with Apple. This uses Apple's native sheet instead of a browser redirect:
-
-```tsx
-import { useSignInWithApple } from 'capacitor-clerk/apple';
-
-const { startAppleAuthenticationFlow } = useSignInWithApple();
-
-const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
-if (createdSessionId && setActive) {
-  await setActive({ session: createdSessionId });
-}
-```
-
-Requires `@capawesome/capacitor-apple-sign-in` and the **Sign in with Apple** capability enabled in your Xcode project (Signing & Capabilities tab). iOS only — use `useSSO({ strategy: 'oauth_apple' })` on Android.
-
-For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custom-flows guides](https://clerk.com/docs/guides/development/custom-flows).
-
 ## Limitations
 
-- **Clerk's prebuilt web UI components not supported.** The web versions of `<SignIn>`, `<SignUp>`, `<UserProfile>`, `<OrganizationSwitcher>`, etc. don't work because `clerk-js` runs in `runtimeEnvironment: 'headless'`. Use the hooks to build custom flows, or use the native components from `capacitor-clerk/native` for the iOS UI.
-- **`<AuthView>` is iOS only.** Android native auth (`clerk-android`) is not yet supported.
+- **Clerk's prebuilt web UI components not supported.** `clerk-js` runs headless, so `<SignIn>`, `<SignUp>`, `<UserProfile>`, etc. don't render. Use the hooks to build your own flows, or use the native components above.
+- **Native components are iOS only.** Android native auth (`clerk-android`) is not yet supported.
 - **Capacitor v6+ only.** Older Capacitor versions don't expose `CapacitorHttp` and won't intercept fetch the way this package needs.
 
 ## Roadmap
 
-- `<AuthView>` for Android via `clerk-android`.
+- Native components for Android via `clerk-android`.
 - Android testing for Sign in with Apple via `useSSO({ strategy: 'oauth_apple' })`.
 
 ## License
