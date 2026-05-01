@@ -23,8 +23,6 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
     private var authHostingController: UIViewController?
     private var profileHostingController: UIViewController?
     private var inlineProfileHostingController: UIViewController?
-    private var sessionObserverTask: Task<Void, Never>?
-    private var initialSessionId: String?
 
     // MARK: - configure
 
@@ -53,14 +51,18 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
         let mode = call.getString("mode") ?? "signInOrUp"
 
         DispatchQueue.main.async {
-            self.initialSessionId = Clerk.shared.session?.id
+            let initialSessionId = Clerk.shared.session?.id
 
-            let rootView = AnyView(ClerkAuthSheetView(mode: self.authMode(from: mode)))
+            let rootView = AnyView(ClerkAuthSheetView(
+                mode: self.authMode(from: mode),
+                initialSessionId: initialSessionId,
+                onAuthCompleted: { [weak self] sessionId in
+                    self?.notifyListeners("authCompleted", data: ["sessionId": sessionId])
+                }
+            ))
             let hc = UIHostingController(rootView: rootView)
             hc.modalPresentationStyle = .fullScreen
             self.authHostingController = hc
-
-            self.startSessionObserver()
 
             guard let rootVC = self.topViewController() else {
                 call.reject("No root view controller found")
@@ -74,8 +76,6 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func dismissAuth(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            self.sessionObserverTask?.cancel()
-            self.sessionObserverTask = nil
             guard let hc = self.authHostingController else {
                 call.resolve()
                 return
@@ -199,20 +199,6 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
 
     // MARK: - Helpers
 
-    private func startSessionObserver() {
-        sessionObserverTask?.cancel()
-        sessionObserverTask = Task { @MainActor in
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 300_000_000) // 300 ms
-                if let id = Clerk.shared.session?.id, id != self.initialSessionId {
-                    self.notifyListeners("authCompleted", data: ["sessionId": id])
-                    self.sessionObserverTask = nil
-                    break
-                }
-            }
-        }
-    }
-
     private func authMode(from mode: String) -> AuthView.Mode {
         switch mode {
         case "signIn": return .signIn
@@ -239,10 +225,17 @@ public class ClerkNativePlugin: CAPPlugin, CAPBridgedPlugin {
 
 private struct ClerkAuthSheetView: View {
     let mode: AuthView.Mode
+    let initialSessionId: String?
+    let onAuthCompleted: (String) -> Void
 
     var body: some View {
         AuthView(mode: mode)
             .environment(Clerk.shared)
+            .onChange(of: Clerk.shared.session?.id) { _, newId in
+                if let id = newId, id != initialSessionId {
+                    onAuthCompleted(id)
+                }
+            }
     }
 }
 

@@ -29,16 +29,32 @@ export function useUserProfileModal(): UseUserProfileModalReturn {
         resolvePromise = resolve;
       });
 
-      const handle = await ClerkNativePlugin.addListener('profileDismissed', async () => {
-        handle.remove();
-        await syncNativeSession();
+      let signedOut = false;
+
+      const profileEventHandle = await ClerkNativePlugin.addListener(
+        'profileEvent',
+        async ({ type }) => {
+          if (type === 'signedOut') {
+            signedOut = true;
+            await clerk.signOut();
+          }
+        },
+      );
+
+      const dismissHandle = await ClerkNativePlugin.addListener('profileDismissed', async () => {
+        dismissHandle.remove();
+        profileEventHandle.remove();
+        if (!signedOut) {
+          await syncNativeSession();
+        }
         resolvePromise();
       });
 
       try {
         await ClerkNativePlugin.presentUserProfile();
       } catch (e) {
-        handle.remove();
+        dismissHandle.remove();
+        profileEventHandle.remove();
         console.error('[useUserProfileModal] presentUserProfile error:', e);
         resolvePromise();
       }
