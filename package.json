@@ -48,6 +48,10 @@
       "types": "./dist/native/index.d.mts",
       "import": "./dist/native/index.mjs"
     },
+    "./web": {
+      "types": "./dist/web/index.d.mts",
+      "import": "./dist/web/index.mjs"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

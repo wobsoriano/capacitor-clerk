@@ -8,6 +8,7 @@ export default defineConfig({
       'native/index': 'src/native/index.ts',
       'apple/index': 'src/apple/index.ts',
       'token-cache/index': 'src/token-cache/index.ts',
+      'web/index': 'src/web/index.ts',
     },
     format: ['esm'],
     sourcemap: true,
