@@ -1,4 +1,5 @@
 import { Clerk } from '@clerk/clerk-js';
+import { Capacitor } from '@capacitor/core';
 import { InternalClerkProvider } from '@clerk/react/internal';
 import type { ComponentType, ReactNode } from 'react';
 import { useMemo } from 'react';
@@ -57,13 +58,15 @@ export function ClerkProvider({
     [publishableKey, tokenCache],
   );
 
+  const isNative = Capacitor.getPlatform() !== 'web';
+
   return (
     <InnerClerkProvider
-      Clerk={clerk}
+      Clerk={isNative ? clerk : null}
       publishableKey={publishableKey}
       // Disable cookie-based auth, dev_browser handshake, and Authorization-
       // header CORS preflights. Bearer auth via __internal_onBeforeRequest.
-      standardBrowser={false}
+      standardBrowser={!isNative}
       // Skip loading the Clerk UI bundle; this package is hooks-only.
       experimental={{ runtimeEnvironment: 'headless' }}
     >

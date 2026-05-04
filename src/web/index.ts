@@ -1,1 +1,21 @@
-export * from '@clerk/react';
+export {
+  APIKeys,
+  CreateOrganization,
+  GoogleOneTap,
+  OrganizationList,
+  OrganizationProfile,
+  OrganizationSwitcher,
+  PricingTable,
+  SignIn,
+  SignInButton,
+  SignInWithMetamaskButton,
+  SignOutButton,
+  SignUp,
+  SignUpButton,
+  UNSAFE_PortalProvider,
+  UserAvatar,
+  UserButton,
+  UserProfile,
+  Waitlist,
+  Show,
+} from '@clerk/react';
