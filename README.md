@@ -209,11 +209,6 @@ function SettingsButton() {
 
 The returned promise resolves when the modal is dismissed. Sign-out from within the modal is detected and synced automatically.
 
-## Limitations
-
-- **Clerk's prebuilt web UI components not supported.** `clerk-js` runs headless, so `<SignIn>`, `<SignUp>`, `<UserProfile>`, etc. don't render. Use the hooks to build your own flows, or use the native components above.
-- **Capacitor v6+ only.** Older Capacitor versions don't expose `CapacitorHttp` and won't intercept fetch the way this package needs.
-
 ## License
 
 MIT.
