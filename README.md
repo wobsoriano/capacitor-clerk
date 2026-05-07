@@ -134,7 +134,7 @@ For more flow patterns (OAuth, MFA, passkeys, session tasks), see [Clerk's custo
 
 ### `<AuthView>`
 
-Presents Clerk's native auth UI as a full-screen modal. On iOS uses `clerk-ios`; on Android uses `clerk-android`. Handles the full flow: configure, present, dismiss, and sync the resulting session back to the JS SDK. Also restores an existing native session transparently on app reload, so the user stays signed in across WebView refreshes.
+Capacitor counterpart of Expo's [`<AuthView>`](https://clerk.com/docs/reference/expo/native-components/auth-view). Presents Clerk's native auth UI as a full-screen modal. On iOS uses `clerk-ios`; on Android uses `clerk-android`. Handles the full flow: configure, present, dismiss, and sync the resulting session back to the JS SDK. Also restores an existing native session transparently on app reload, so the user stays signed in across WebView refreshes.
 
 ```tsx
 import { AuthView } from 'capacitor-clerk/native';
@@ -150,7 +150,7 @@ export function AuthScreen() {
 
 ### `<UserButton>`
 
-Renders a circular avatar button. Tapping it presents the native `UserProfileView` as a full-screen modal. When the user dismisses the sheet, the JS Clerk session is automatically refreshed.
+Capacitor counterpart of Expo's [`<UserButton>`](https://clerk.com/docs/reference/expo/native-components/user-button). Renders a circular avatar button. Tapping it presents the native `UserProfileView` as a full-screen modal. When the user dismisses the sheet, the JS Clerk session is automatically refreshed.
 
 ```tsx
 import { UserButton } from 'capacitor-clerk/native';
@@ -163,7 +163,7 @@ Renders the user's profile photo (`user.imageUrl`) or an initial letter fallback
 
 ### `<UserProfileView>`
 
-Embeds the native `UserProfileView` directly in your layout (not as a modal). The native view tracks the div's position and size, so you control placement entirely with CSS. Unmounting the component removes the native view.
+Capacitor counterpart of Expo's [`<UserProfileView>`](https://clerk.com/docs/reference/expo/native-components/user-profile-view). Embeds the native `UserProfileView` directly in your layout (not as a modal). The native view tracks the div's position and size, so you control placement entirely with CSS. Unmounting the component removes the native view.
 
 **Fullscreen** (dedicated profile screen, no dismiss button):
 
